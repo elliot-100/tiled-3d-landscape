@@ -4,7 +4,7 @@ import pygame.gfxdraw
 import colors
 
 
-class Tiler():
+class Tiler:
     def __init__(self):
         # initialize pygame
         pygame.init()
@@ -54,11 +54,9 @@ class Tiler():
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
                     self.running = False
 
-
-
     def camera(self, cart_x, cart_y):
         iso_x = cart_x - cart_y + self.screen_width//2
-        iso_y= (cart_x + cart_y) / 2 + self.screen_height//2
+        iso_y = (cart_x + cart_y) / 2 + self.screen_height//2
         return iso_x, iso_y
 
     def draw_tile(self, pos_x, pos_y):
