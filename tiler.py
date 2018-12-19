@@ -9,11 +9,11 @@ class Tiler:
     def __init__(self):
         # initialize pygame
         pygame.init()
-        self.screen_width = 640
+        self.screen_width = 700
         self.screen_height = 480
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption('Tiler')
-        self.map_size = (10, 10)
+        self.map_size = (8, 8)
         self.tile_size = 60
 
         self.fps_clock = pygame.time.Clock()
@@ -61,8 +61,8 @@ class Tiler:
                     print("quit")
 
     def camera(self, world_x, world_y):
-        screen_x = (world_x + world_y) // math.sqrt(2)
-        screen_y = (world_y - world_x) // math.sqrt(2)
+        screen_x = (world_x + world_y) / math.sqrt(2)
+        screen_y = (world_y - world_x) / math.sqrt(2) / 2 + self.screen_height / 2
         return screen_x, screen_y
 
     def draw_tile(self, world_x, world_y):
