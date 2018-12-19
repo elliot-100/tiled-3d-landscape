@@ -32,8 +32,6 @@ class Tiler:
 
     def render_frame(self):
         self.screen.fill(colors.BACKGROUND)
-        pygame.draw.rect(self.screen, colors.RED, ((0, 0), (self.tile_size, self.tile_size)))
-        # pygame.draw.rect(self.screen, colors.RED, ((100, 100), (self.tile_size, self.tile_size)))
 
         for x in range(self.map_size[0]):
             for y in range(self.map_size[1]):
@@ -61,8 +59,8 @@ class Tiler:
                     print("quit")
 
     def camera(self, world_x, world_y):
-        screen_x = (world_x + world_y) / math.sqrt(2)
-        screen_y = (world_y - world_x) / math.sqrt(2) / 2 + self.screen_height / 2
+        screen_x = (world_x - world_y) / math.sqrt(2) + self.screen_width / 2
+        screen_y = (world_x + world_y) / math.sqrt(2) / 2 + 100
         return screen_x, screen_y
 
     def draw_tile(self, world_x, world_y):
@@ -77,7 +75,7 @@ class Tiler:
             iso_pointlist.append(self.camera(local_x + world_x, local_y + world_y))
         pygame.draw.polygon(self.screen, colors.FOREGROUND, iso_pointlist, 0) # fill
         pygame.draw.polygon(self.screen, colors.BLACK, iso_pointlist, 1) #border
-        # pygame.draw.rect(self.screen, colors.BLUE, (self.camera(pos_x, pos_y), (4,4))) #origin
+        pygame.draw.rect(self.screen, colors.BLUE, (self.camera(world_x, world_y), (4,4))) #origin
 
 
 if __name__ == "__main__":
