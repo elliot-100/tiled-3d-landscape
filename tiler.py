@@ -15,6 +15,7 @@ class Tiler:
         pygame.display.set_caption('Tiler')
         self.map_size = (8, 8)
         self.tile_size = 60
+        self.world_size = self.map_size * self.tile_size
 
         self.fps_clock = pygame.time.Clock()
         self.running = True
@@ -33,10 +34,9 @@ class Tiler:
     def render_frame(self):
         self.screen.fill(colors.BACKGROUND)
 
-        for x in range(self.map_size[0]):
-            for y in range(self.map_size[1]):
-                world_x, world_y = x * self.tile_size, y * self.tile_size
-                self.draw_tile(world_x, world_y)
+        for index_x in range(self.map_size[0]):
+            for index_y in range(self.map_size[1]):
+                self.draw_tile(index_x, index_y)
 
         # limit fps
         self.fps_clock.tick(60)
@@ -63,7 +63,7 @@ class Tiler:
         screen_y = (world_x + world_y) / math.sqrt(2) / 2 + 100
         return screen_x, screen_y
 
-    def draw_tile(self, world_x, world_y):
+    def draw_tile(self, index_x, index_y):
         local_offsets = [(0, 0),
                      (self.tile_size, 0),
                      (self.tile_size, self.tile_size),
@@ -72,10 +72,22 @@ class Tiler:
         iso_pointlist =[]
 
         for local_x, local_y in local_offsets:
+            world_x, world_y = index_x * self.tile_size, index_y * self.tile_size
             iso_pointlist.append(self.camera(local_x + world_x, local_y + world_y))
-        pygame.draw.polygon(self.screen, colors.FOREGROUND, iso_pointlist, 0) # fill
-        pygame.draw.polygon(self.screen, colors.BLACK, iso_pointlist, 1) #border
-        pygame.draw.rect(self.screen, colors.BLUE, (self.camera(world_x, world_y), (4,4))) #origin
+
+        r, g, b = colors.GREEN
+        total_grid_depth = max(self.map_size)
+        current_grid_depth = index_y
+        r = int(r + (255-r) * current_grid_depth/total_grid_depth)
+        g = int(g + (255-g) * current_grid_depth/total_grid_depth)
+        b = int(b + (255-b) * current_grid_depth/total_grid_depth)
+        color_shade = (r, g, b)
+        print(color_shade)
+
+        pygame.draw.polygon(self.screen, color_shade, iso_pointlist, 0) # fill
+        pygame.draw.polygon(self.screen, colors.BLACK, iso_pointlist, 1)  # border
+        # pygame.draw.rect(self.screen, colors.BLUE, (self.camera(world_x, world_y), (4,4)))  # origin marker
+
 
 
 if __name__ == "__main__":
