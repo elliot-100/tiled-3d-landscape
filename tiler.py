@@ -76,17 +76,24 @@ class Tiler:
             iso_pointlist.append(self.camera(local_x + world_x, local_y + world_y))
 
         r, g, b = colors.GREEN
-        total_grid_depth = max(self.map_size)
-        current_grid_depth = index_y
-        r = int(r + (255-r) * current_grid_depth/total_grid_depth)
-        g = int(g + (255-g) * current_grid_depth/total_grid_depth)
-        b = int(b + (255-b) * current_grid_depth/total_grid_depth)
+        total_grid_depth = self.map_size[0] + self.map_size[1] -2
+
+        current_grid_depth = total_grid_depth - (index_y + index_x)
+        # r = int(r + (255-r) * current_grid_depth/total_grid_depth)
+        # g = int(g + (255-g) * current_grid_depth/total_grid_depth)
+        # b = int(b + (255-b) * current_grid_depth/total_grid_depth)
         color_shade = (r, g, b)
         print(color_shade)
 
         pygame.draw.polygon(self.screen, color_shade, iso_pointlist, 0) # fill
         pygame.draw.polygon(self.screen, colors.BLACK, iso_pointlist, 1)  # border
         # pygame.draw.rect(self.screen, colors.BLUE, (self.camera(world_x, world_y), (4,4)))  # origin marker
+        label_font = pygame.font.SysFont("monospace", 12)
+        # label_text = str(index_x) + ', ' + str(index_y)
+        label_text = str(current_grid_depth)
+        tile_label = label_font.render(label_text, 1, colors.YELLOW, colors.BACKGROUND)
+        # TO DO: is it right to blit this here?
+        self.screen.blit(tile_label, self.camera(world_x, world_y))
 
 
 
