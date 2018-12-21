@@ -23,8 +23,12 @@ class Tiler:
     def __init__(self):
         self.terrain = Terrain(8, 8)
         self.tile_size = 60
-        self.terrain_height_scale = 0.1
+        self.terrain_height_scale = 0.5
         self.world_size = (self.terrain.map_size_x, self.terrain.map_size_y) * self.tile_size
+        self.perturbs_per_update = 10
+        self.max_perturbs = 100
+
+        self.perturbs_counter = 0
 
         # initialize pygame
         pygame.init()
@@ -42,7 +46,12 @@ class Tiler:
 
     def main_loop(self):
         self.handle_input()
-        self.terrain.perturb()
+        if self.perturbs_counter < self.max_perturbs:
+            for _ in range(self.perturbs_per_update):
+                if self.perturbs_counter < self.max_perturbs:
+                    self.terrain.perturb()
+                    self.perturbs_counter += 1
+                    print(self.perturbs_counter)
         self.render_frame()
 
     def update(self):
@@ -56,7 +65,7 @@ class Tiler:
                 self.draw_tile(index_x, index_y)
 
         # limit fps
-        self.fps_clock.tick(60)
+        self.fps_clock.tick(10)
 
         # update screen
         pygame.display.update()
