@@ -1,4 +1,5 @@
 import math
+import random
 import pygame
 import pygame.gfxdraw
 
@@ -10,20 +11,27 @@ class Terrain:
         self.map_size_x = map_size_x
         self.map_size_y = map_size_y
         self.map_grid = [[0 for x_index in range(self.map_size_x)] for y_index in range(self.map_size_y)]
-        self.map_grid[2][3] = 1
 
+    def perturb(self):
+        index_x, index_y = self.get_random_pos()
+        self.map_grid[index_x][index_y] += 1
+
+    def get_random_pos(self):
+        return random.randint(0, self.map_size_x-1), random.randint(0, self.map_size_y-1)
 
 class Tiler:
     def __init__(self):
+        self.terrain = Terrain(8, 8)
+        self.tile_size = 60
+        self.terrain_height_scale = 0.1
+        self.world_size = (self.terrain.map_size_x, self.terrain.map_size_y) * self.tile_size
+
         # initialize pygame
         pygame.init()
         self.screen_width = 700
         self.screen_height = 480
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption('Tiler')
-        self.terrain = Terrain(8, 8)
-        self.tile_size = 60
-        self.world_size = (self.terrain.map_size_x, self.terrain.map_size_y) * self.tile_size
 
         self.fps_clock = pygame.time.Clock()
         self.running = True
@@ -34,6 +42,7 @@ class Tiler:
 
     def main_loop(self):
         self.handle_input()
+        self.terrain.perturb()
         self.render_frame()
 
     def update(self):
@@ -69,7 +78,7 @@ class Tiler:
     def camera(self, world_x, world_y, world_height=0):
         screen_x = (world_x - world_y) / math.sqrt(2) + self.screen_width / 2
         screen_y = (world_x + world_y) / math.sqrt(2) / 2 + 100
-        screen_y += world_height
+        screen_y += world_height * self.terrain_height_scale
         # screen_x = int(screen_x)
         # screen_y = int(screen_y)
         return screen_x, screen_y
@@ -98,18 +107,21 @@ class Tiler:
         # print(color_shade)
 
         pygame.draw.polygon(self.screen, color_shade, iso_pointlist, 0) # fill
-        pygame.draw.polygon(self.screen, colors.BLACK, iso_pointlist, 1)  # border
+        pygame.draw.polygon(self.screen, colors.BACKGROUND, iso_pointlist, 1)  # border
         # pygame.draw.line(self.screen, colors.BLACK, iso_pointlist[1], iso_pointlist[2], 1)  # border
         # pygame.draw.line(self.screen, colors.BLACK, iso_pointlist[2], iso_pointlist[3], 1)  # border
         # pygame.draw.rect(self.screen, colors.BLUE, (self.camera(world_x, world_y), (4,4)))  # origin marker
         label_font = pygame.font.SysFont("monospace", 12)
         # label_text = str(index_x) + ', ' + str(index_y)
-        label_text = str(current_grid_depth)
+        # label_text = str(current_grid_depth)
         label_text = str(self.terrain.map_grid[index_x][index_y])
         tile_label = label_font.render(label_text, 1, colors.YELLOW, colors.BACKGROUND)
         # TO DO: is it right to blit this here?
-        # self.screen.blit(tile_label, self.camera(world_x, world_y))
-        # self.screen.blit(tile_label, self.camera(world_x, world_y))
+        text_pos = self.camera(world_x, world_y, world_height)
+        # offset text labels
+        tp_list = list(text_pos)
+        tp_list[1] += self.tile_size/4
+        # self.screen.blit(tile_label, tp_list)
 
 
 if __name__ == "__main__":
