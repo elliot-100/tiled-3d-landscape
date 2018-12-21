@@ -5,6 +5,14 @@ import pygame.gfxdraw
 import colors
 
 
+class Terrain:
+    def __init__(self, map_size_x, map_size_y):
+        self.map_size_x = map_size_x
+        self.map_size_y = map_size_y
+        self.map_grid = [[0 for x_index in range(self.map_size_x)] for y_index in range(self.map_size_y)]
+        self.map_grid[2][3] = 1
+
+
 class Tiler:
     def __init__(self):
         # initialize pygame
@@ -13,9 +21,9 @@ class Tiler:
         self.screen_height = 480
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption('Tiler')
-        self.map_size = (8, 8)
+        self.terrain = Terrain(8,8)
         self.tile_size = 60
-        self.world_size = self.map_size * self.tile_size
+        self.world_size = (self.terrain.map_size_x, self.terrain.map_size_y) * self.tile_size
 
         self.fps_clock = pygame.time.Clock()
         self.running = True
@@ -34,8 +42,8 @@ class Tiler:
     def render_frame(self):
         self.screen.fill(colors.BACKGROUND)
 
-        for index_x in range(self.map_size[0]):
-            for index_y in range(self.map_size[1]):
+        for index_x in range(self.terrain.map_size_x):
+            for index_y in range(self.terrain.map_size_y):
                 self.draw_tile(index_x, index_y)
 
         # limit fps
@@ -61,6 +69,8 @@ class Tiler:
     def camera(self, world_x, world_y):
         screen_x = (world_x - world_y) / math.sqrt(2) + self.screen_width / 2
         screen_y = (world_x + world_y) / math.sqrt(2) / 2 + 100
+        # screen_x = int(screen_x)
+        # screen_y = int(screen_y)
         return screen_x, screen_y
 
     def draw_tile(self, index_x, index_y):
@@ -76,27 +86,31 @@ class Tiler:
             iso_pointlist.append(self.camera(local_x + world_x, local_y + world_y))
 
         r, g, b = colors.GREEN
-        total_grid_depth = self.map_size[0] + self.map_size[1] -2
+        total_grid_depth = self.terrain.map_size_x + self.terrain.map_size_y -2
 
         current_grid_depth = total_grid_depth - (index_y + index_x)
         r = int(r + (255-r) * current_grid_depth/total_grid_depth * 0.7)
         g = int(g + (255-g) * current_grid_depth/total_grid_depth * 0.7)
         b = int(b + (255-b) * current_grid_depth/total_grid_depth * 0.7)
         color_shade = (r, g, b)
-        print(color_shade)
+        # print(color_shade)
 
         pygame.draw.polygon(self.screen, color_shade, iso_pointlist, 0) # fill
         pygame.draw.polygon(self.screen, colors.BLACK, iso_pointlist, 1)  # border
+        # pygame.draw.line(self.screen, colors.BLACK, iso_pointlist[1], iso_pointlist[2], 1)  # border
+        # pygame.draw.line(self.screen, colors.BLACK, iso_pointlist[2], iso_pointlist[3], 1)  # border
         # pygame.draw.rect(self.screen, colors.BLUE, (self.camera(world_x, world_y), (4,4)))  # origin marker
         label_font = pygame.font.SysFont("monospace", 12)
         # label_text = str(index_x) + ', ' + str(index_y)
         label_text = str(current_grid_depth)
+        label_text = str(self.terrain.map_grid[index_x][index_y])
         tile_label = label_font.render(label_text, 1, colors.YELLOW, colors.BACKGROUND)
         # TO DO: is it right to blit this here?
         # self.screen.blit(tile_label, self.camera(world_x, world_y))
-
+        self.screen.blit(tile_label, self.camera(world_x, world_y))
 
 
 if __name__ == "__main__":
     demo = Tiler()
     demo.run()
+
