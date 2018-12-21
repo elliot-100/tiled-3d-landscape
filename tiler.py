@@ -79,9 +79,9 @@ class Tiler:
         total_grid_depth = self.map_size[0] + self.map_size[1] -2
 
         current_grid_depth = total_grid_depth - (index_y + index_x)
-        # r = int(r + (255-r) * current_grid_depth/total_grid_depth)
-        # g = int(g + (255-g) * current_grid_depth/total_grid_depth)
-        # b = int(b + (255-b) * current_grid_depth/total_grid_depth)
+        r = int(r + (255-r) * current_grid_depth/total_grid_depth * 0.7)
+        g = int(g + (255-g) * current_grid_depth/total_grid_depth * 0.7)
+        b = int(b + (255-b) * current_grid_depth/total_grid_depth * 0.7)
         color_shade = (r, g, b)
         print(color_shade)
 
@@ -93,7 +93,7 @@ class Tiler:
         label_text = str(current_grid_depth)
         tile_label = label_font.render(label_text, 1, colors.YELLOW, colors.BACKGROUND)
         # TO DO: is it right to blit this here?
-        self.screen.blit(tile_label, self.camera(world_x, world_y))
+        # self.screen.blit(tile_label, self.camera(world_x, world_y))
 
 
 
