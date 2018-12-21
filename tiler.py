@@ -21,7 +21,7 @@ class Tiler:
         self.screen_height = 480
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption('Tiler')
-        self.terrain = Terrain(8,8)
+        self.terrain = Terrain(8, 8)
         self.tile_size = 60
         self.world_size = (self.terrain.map_size_x, self.terrain.map_size_y) * self.tile_size
 
@@ -66,9 +66,10 @@ class Tiler:
                     self.running = False
                     print("quit")
 
-    def camera(self, world_x, world_y):
+    def camera(self, world_x, world_y, world_height=0):
         screen_x = (world_x - world_y) / math.sqrt(2) + self.screen_width / 2
         screen_y = (world_x + world_y) / math.sqrt(2) / 2 + 100
+        screen_y += world_height
         # screen_x = int(screen_x)
         # screen_y = int(screen_y)
         return screen_x, screen_y
@@ -83,7 +84,8 @@ class Tiler:
 
         for local_x, local_y in local_offsets:
             world_x, world_y = index_x * self.tile_size, index_y * self.tile_size
-            iso_pointlist.append(self.camera(local_x + world_x, local_y + world_y))
+            world_height = -self.terrain.map_grid[index_x][index_y] * self.tile_size/2
+            iso_pointlist.append(self.camera(local_x + world_x, local_y + world_y, world_height))
 
         r, g, b = colors.GREEN
         total_grid_depth = self.terrain.map_size_x + self.terrain.map_size_y -2
@@ -107,7 +109,7 @@ class Tiler:
         tile_label = label_font.render(label_text, 1, colors.YELLOW, colors.BACKGROUND)
         # TO DO: is it right to blit this here?
         # self.screen.blit(tile_label, self.camera(world_x, world_y))
-        self.screen.blit(tile_label, self.camera(world_x, world_y))
+        # self.screen.blit(tile_label, self.camera(world_x, world_y))
 
 
 if __name__ == "__main__":
