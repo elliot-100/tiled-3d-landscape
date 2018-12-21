@@ -10,14 +10,27 @@ class Terrain:
     def __init__(self, map_size_x, map_size_y):
         self.map_size_x = map_size_x
         self.map_size_y = map_size_y
-        self.map_grid = [[0 for x_index in range(self.map_size_x)] for y_index in range(self.map_size_y)]
+        self.map_grid = [[0 for index_x in range(self.map_size_x)] for index_y in range(self.map_size_y)]
 
     def perturb(self):
-        index_x, index_y = self.get_random_pos()
-        self.map_grid[index_x][index_y] += 1
+        particles_per_drop = 10
+        drop_index_x, drop_index_y = self.get_random_pos()
+        self.map_grid[drop_index_x][drop_index_y] += particles_per_drop
+
+        neighbour_offsets = (-1,-1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)
+        for offset in neighbour_offsets:
+            drop_cell_height = self.map_grid[drop_index_x][drop_index_y]
+            neighbour_cell_height = self.map_grid[drop_index_x + offset[0]][drop_index_y + offset[1]]
+            if drop_cell_height > neighbour_cell_height +1:
+                self.map_grid[drop_index_x + offset[0]][drop_index_y + offset[1]] += 1
+                self.map_grid[drop_index_x][drop_index_y] -=1
+
+
+
 
     def get_random_pos(self):
-        return random.randint(0, self.map_size_x-1), random.randint(0, self.map_size_y-1)
+        # never returns an edge cell
+        return random.randint(1, self.map_size_x-2), random.randint(1, self.map_size_y-2)
 
 class Tiler:
     def __init__(self):
@@ -25,8 +38,8 @@ class Tiler:
         self.tile_size = 60
         self.terrain_height_scale = 0.5
         self.world_size = (self.terrain.map_size_x, self.terrain.map_size_y) * self.tile_size
-        self.perturbs_per_update = 10
-        self.max_perturbs = 100
+        self.perturbs_per_update = 1
+        self.max_perturbs = 3
 
         self.perturbs_counter = 0
 
@@ -51,7 +64,6 @@ class Tiler:
                 if self.perturbs_counter < self.max_perturbs:
                     self.terrain.perturb()
                     self.perturbs_counter += 1
-                    print(self.perturbs_counter)
         self.render_frame()
 
     def update(self):
