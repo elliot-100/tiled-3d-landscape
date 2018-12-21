@@ -90,10 +90,11 @@ class Tiler:
 
     def render_frame(self):
         self.screen.fill(colors.BACKGROUND)
-
+        self.draw_floor()
         for index_x in range(self.terrain.map_size_x):
             for index_y in range(self.terrain.map_size_y):
                 self.draw_tile(index_x, index_y)
+
 
         # limit fps
         self.fps_clock.tick(10)
@@ -122,6 +123,21 @@ class Tiler:
         # screen_x = int(screen_x)
         # screen_y = int(screen_y)
         return screen_x, screen_y
+
+    def draw_floor(self):
+        world_max_x = self.world_size[0] * self.tile_size
+        world_max_y = self.world_size[1] * self.tile_size
+        world_pointlist = [(0, 0),
+                         (world_max_x, 0),
+                         (world_max_x, world_max_y),
+                         (0, world_max_y),
+                         (0, 0)]
+        screen_pointlist = []
+
+        for world_x, world_y in world_pointlist:
+            screen_pointlist.append(self.camera(world_x, world_y, -1))
+        pygame.draw.polygon(self.screen, colors.WORLD_EDGES, screen_pointlist)
+
 
     def draw_tile(self, index_x, index_y):
         local_offsets = [(0, 0),
