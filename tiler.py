@@ -14,7 +14,7 @@ class Terrain:
         self.map_grid = [[0 for _x in range(self.map_size_x)] for _y in range(self.map_size_y)]
 
     def perturb(self):
-        particles_per_drop = 8
+        particles_per_drop = 12
         drop_index_x, drop_index_y = self.get_random_pos()
         self.map_grid[drop_index_x][drop_index_y] += particles_per_drop
         neighbour_offsets = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
@@ -61,10 +61,11 @@ def depth_shade(base_color, depth):
 
 class Tiler:
     def __init__(self):
-        self.terrain = Terrain(8, 8)  # 8, 8
+        map_size_cells = (8, 8)  # 8, 8
+        self.terrain = Terrain(map_size_cells[0]+1, map_size_cells[1]+1)
         self.tile_size = 60  # 60
-        self.terrain_height_scale = 0.5
-        self.world_size = (self.terrain.map_size_x, self.terrain.map_size_y) * self.tile_size
+        self.terrain_height_scale = 0.71
+        self.world_size = (self.terrain.map_size_x-1, self.terrain.map_size_y-1) * self.tile_size
         self.perturbs_per_update = 1
         self.max_perturbs = 20
 
@@ -100,8 +101,8 @@ class Tiler:
     def render_frame(self):
         self.screen.fill(colors.BACKGROUND)
         self.draw_floor()
-        for index_x in range(self.terrain.map_size_x):
-            for index_y in range(self.terrain.map_size_y):
+        for index_x in range(self.terrain.map_size_x-1):
+            for index_y in range(self.terrain.map_size_y-1):
                 self.draw_tile(index_x, index_y)
 
 
@@ -149,17 +150,13 @@ class Tiler:
 
 
     def draw_tile(self, index_x, index_y):
-        local_offsets = [(0, 0),
-                         (self.tile_size, 0),
-                         (self.tile_size, self.tile_size),
-                         (0, self.tile_size),
-                         (0, 0)]
+        local_offsets = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]
         screen_pointlist = []
 
-        for local_x, local_y in local_offsets:
+        for offset_x, offset_y in local_offsets:
             world_x, world_y = index_x * self.tile_size, index_y * self.tile_size
-            world_height = -self.terrain.map_grid[index_x][index_y] * self.tile_size / 2
-            screen_pointlist.append(self.camera(local_x + world_x, local_y + world_y, world_height))
+            world_height = -self.terrain.map_grid[index_x+offset_x][index_y+offset_y] * self.tile_size / 2
+            screen_pointlist.append(self.camera(offset_x * self.tile_size + world_x, offset_y * self.tile_size + world_y, world_height))
 
         current_map_depth = self.terrain.map_depth - (index_y + index_x)
         # print((self.depth_shade(colors.GREEN, current_map_depth/self.terrain.map_depth)))
