@@ -53,9 +53,9 @@ class Terrain:
 
 def depth_shade(base_color, depth):
     r, g, b = base_color
-    r = int(r + (255 - r) * depth * 0.4)
-    g = int(g + (255 - g) * depth * 0.4)
-    b = int(b + (255 - b) * depth * 0.45)
+    r = int(r + (255 - r) * depth * 0.5)
+    g = int(g + (255 - g) * depth * 0.5)
+    b = int(b + (255 - b) * depth * 0.65)
     return r, g, b
 
 
@@ -69,7 +69,6 @@ class Tiler:
         self.perturbs_per_update = 1
         self.max_perturbs = 20
         self.sea_height = 2
-
         self.perturbs_counter = 0
 
         # initialize pygame

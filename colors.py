@@ -7,7 +7,7 @@ GREY_DARK = (51, 51, 51)
 BLACK = (0, 0, 0)
 
 GRASS = (0, 180, 20)
-SEA = (0, 40, 180)
+SEA = (0, 80, 220)
 SEABED = (0, 20, 90)
 
 DEBUG = YELLOW
