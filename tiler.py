@@ -68,6 +68,7 @@ class Tiler:
         self.world_size = (self.terrain.map_size_x-1, self.terrain.map_size_y-1) * self.tile_size
         self.perturbs_per_update = 1
         self.max_perturbs = 20
+        self.sea_height = 1
 
         self.perturbs_counter = 0
 
@@ -151,32 +152,29 @@ class Tiler:
 
     def draw_tile(self, index_x, index_y):
         local_offsets = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]
-        screen_pointlist = []
+        heights_at_offsets = []
+        terrain_pointlist_screen = []
 
         for offset_x, offset_y in local_offsets:
             world_x, world_y = index_x * self.tile_size, index_y * self.tile_size
-            world_height = -self.terrain.map_grid[index_x+offset_x][index_y+offset_y] * self.tile_size / 2
-            screen_pointlist.append(self.camera(offset_x * self.tile_size + world_x, offset_y * self.tile_size + world_y, world_height))
+            map_height = self.terrain.map_grid[index_x+offset_x][index_y+offset_y]
+            heights_at_offsets.append(map_height)
+            world_height = - map_height * self.tile_size / 2
+            terrain_pointlist_screen.append(self.camera(offset_x * self.tile_size + world_x, offset_y * self.tile_size + world_y, world_height))
 
         current_map_depth = self.terrain.map_depth - (index_y + index_x)
-        # print((self.depth_shade(colors.GREEN, current_map_depth/self.terrain.map_depth)))
-        pygame.draw.polygon(self.screen, depth_shade(colors.GRASS, current_map_depth / self.terrain.map_depth),
-                            screen_pointlist)  # fill
-        pygame.draw.polygon(self.screen, colors.BACKGROUND, screen_pointlist, 1)  # border
-        # pygame.draw.line(self.screen, colors.BLACK, iso_pointlist[1], iso_pointlist[2], 1)  # border
-        # pygame.draw.line(self.screen, colors.BLACK, iso_pointlist[2], iso_pointlist[3], 1)  # border
-        # pygame.draw.rect(self.screen, colors.BLUE, (self.camera(world_x, world_y), (4,4)))  # origin marker
-        # label_font = pygame.font.SysFont("monospace", 12)
-        # label_text = str(index_x) + ', ' + str(index_y)
-        # label_text = str(current_grid_depth)
-        # label_text = str(self.terrain.map_grid[index_x][index_y])
-        # tile_label = label_font.render(label_text, 1, colors.YELLOW, colors.BACKGROUND)
-        # TO DO: is it right to blit this here?
-        # text_pos = self.camera(world_x, world_y, world_height)
-        # offset text labels
-        # tp_list = list(text_pos)
-        # tp_list[1] += self.tile_size/4
-        # self.screen.blit(tile_label, tp_list)
+
+        if min(heights_at_offsets) <= self.sea_height:
+            pygame.draw.polygon(self.screen, depth_shade(colors.SEA, current_map_depth / self.terrain.map_depth),
+                                terrain_pointlist_screen)  # fill
+            pygame.draw.polygon(self.screen, colors.BACKGROUND, terrain_pointlist_screen, 1)  # border
+
+
+        else:
+            pygame.draw.polygon(self.screen, depth_shade(colors.GRASS, current_map_depth / self.terrain.map_depth),
+                                terrain_pointlist_screen)  # fill
+            pygame.draw.polygon(self.screen, colors.BACKGROUND, terrain_pointlist_screen, 1)  # border
+
 
 
 if __name__ == "__main__":
