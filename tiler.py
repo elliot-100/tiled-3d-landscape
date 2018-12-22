@@ -14,7 +14,7 @@ class Terrain:
         self.map_grid = [[0 for _x in range(self.map_size_x)] for _y in range(self.map_size_y)]
 
     def perturb(self):
-        particles_per_drop = 12
+        particles_per_drop = 32
         drop_index_x, drop_index_y = self.get_random_pos()
         self.map_grid[drop_index_x][drop_index_y] += particles_per_drop
         neighbour_offsets = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
@@ -61,14 +61,14 @@ def depth_shade(base_color, depth):
 
 class Tiler:
     def __init__(self):
-        map_size_cells = (8, 8)  # 8, 8
+        map_size_cells = (16, 16)  # 8, 8
         self.terrain = Terrain(map_size_cells[0]+1, map_size_cells[1]+1)
-        self.tile_size = 60  # 60
+        self.tile_size = 32  # 60
         self.terrain_height_scale = 0.71
         self.world_size = (self.terrain.map_size_x-1, self.terrain.map_size_y-1) * self.tile_size
         self.perturbs_per_update = 1
-        self.max_perturbs = 20
-        self.sea_height = 2
+        self.max_perturbs = 40
+        self.sea_height = 3
         self.perturbs_counter = 0
 
         # initialize pygame
