@@ -169,16 +169,16 @@ class Tiler:
         if max(heights_at_offsets) <= self.sea_height:
             pygame.draw.polygon(self.screen, depth_shade(colors.SEABED, current_map_depth / self.terrain.map_depth),
                                 terrain_pointlist_screen)  # fill
-            pygame.draw.polygon(self.screen, colors.BACKGROUND, terrain_pointlist_screen, 1)  # border
+            pygame.draw.polygon(self.screen, colors.SEABED_GRID, terrain_pointlist_screen, 1)  # border
 
             pygame.draw.polygon(self.screen, depth_shade(colors.SEA, current_map_depth / self.terrain.map_depth),
                                 sea_pointlist_screen)  # fill
-            pygame.draw.polygon(self.screen, colors.BACKGROUND, sea_pointlist_screen, 1)  # border
+            pygame.draw.polygon(self.screen, colors.SEA_GRID, sea_pointlist_screen, 1)  # border
 
         else:
             pygame.draw.polygon(self.screen, depth_shade(colors.GRASS, current_map_depth / self.terrain.map_depth),
                                 terrain_pointlist_screen)  # fill
-            pygame.draw.polygon(self.screen, colors.BACKGROUND, terrain_pointlist_screen, 1)  # border
+            pygame.draw.polygon(self.screen, colors.GRASS_GRID, terrain_pointlist_screen, 1)  # border
 
 
 
