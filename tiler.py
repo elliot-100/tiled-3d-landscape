@@ -14,7 +14,7 @@ class Terrain:
         self.map_grid = [[0 for _x in range(self.map_size_x)] for _y in range(self.map_size_y)]
 
     def perturb(self):
-        particles_per_drop = 80
+        particles_per_drop = 8
         drop_index_x, drop_index_y = self.get_random_pos()
         self.map_grid[drop_index_x][drop_index_y] += particles_per_drop
         neighbour_offsets = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
@@ -42,6 +42,14 @@ class Terrain:
         # never returns an edge cell
         return random.randint(1, self.map_size_x - 2), random.randint(1, self.map_size_y - 2)
 
+    def normalise(self):
+        lowest_height_value = min([min(row) for row in self.map_grid])
+        print("lowest: " + str(lowest_height_value))
+        if lowest_height_value > 0:
+            for index_x in range(self.map_size_x):
+                for index_y in range(self.map_size_y):
+                   self.map_grid[index_x][index_y] -= 1
+
 
 def depth_shade(base_color, depth):
     r, g, b = base_color
@@ -53,12 +61,12 @@ def depth_shade(base_color, depth):
 
 class Tiler:
     def __init__(self):
-        self.terrain = Terrain(16, 16)
-        self.tile_size = 32  # 60
+        self.terrain = Terrain(8, 8)  # 8, 8
+        self.tile_size = 60  # 60
         self.terrain_height_scale = 0.5
         self.world_size = (self.terrain.map_size_x, self.terrain.map_size_y) * self.tile_size
         self.perturbs_per_update = 1
-        self.max_perturbs = 12
+        self.max_perturbs = 20
 
         self.perturbs_counter = 0
 
@@ -83,6 +91,7 @@ class Tiler:
                 if self.perturbs_counter < self.max_perturbs:
                     self.terrain.perturb()
                     self.perturbs_counter += 1
+        self.terrain.normalise()
         self.render_frame()
 
     def update(self):
