@@ -14,7 +14,7 @@ class Terrain:
         self.map_grid = [[0 for _x in range(self.map_size_x+1)] for _y in range(self.map_size_y+1)]
 
     def perturb(self):
-        particles_per_drop = 32
+        particles_per_drop = 128
         drop_index_x, drop_index_y = self.get_random_pos()
         self.map_grid[drop_index_x][drop_index_y] += particles_per_drop
         neighbour_offsets = ((-1, -1), (0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0))
@@ -65,12 +65,12 @@ class Tiler:
     def __init__(self):
         map_size_cells = (16, 16)  # 8, 8
         self.terrain = Terrain(map_size_cells[0]+1, map_size_cells[1]+1)
-        self.tile_size = 32  # 60
-        self.terrain_height_scale = 0.71
+        self.tile_size = 30  # 60
+        self.terrain_height_scale = 1/math.sqrt(2)
         self.world_size = (self.terrain.map_size_x-1, self.terrain.map_size_y-1) * self.tile_size
         self.perturbs_per_update = 1
-        self.max_perturbs = 40
-        self.sea_height = 3
+        self.max_perturbs = 10
+        self.sea_height = 4
 
         self.perturbs_counter = 0
 
