@@ -46,7 +46,6 @@ class Terrain:
 
     def normalise(self):
         lowest_height_value = min([min(row) for row in self.map_grid])
-        print("lowest: " + str(lowest_height_value))
         if lowest_height_value > 0:
             for index_x in range(self.map_size_x):
                 for index_y in range(self.map_size_y):
