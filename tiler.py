@@ -11,7 +11,7 @@ class Terrain:
         self.map_size_x = map_size_x
         self.map_size_y = map_size_y
         self.map_depth = map_size_x + map_size_y + 2
-        self.map_grid = [[0 for _x in range(self.map_size_x)] for _y in range(self.map_size_y)]
+        self.map_grid = [[0 for _x in range(self.map_size_x+1)] for _y in range(self.map_size_y+1)]
 
     def perturb(self):
         particles_per_drop = 32
