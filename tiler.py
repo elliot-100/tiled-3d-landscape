@@ -17,24 +17,25 @@ class Terrain:
         particles_per_drop = 32
         drop_index_x, drop_index_y = self.get_random_pos()
         self.map_grid[drop_index_x][drop_index_y] += particles_per_drop
-        neighbour_offsets = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        neighbour_offsets = ((-1, -1), (0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0))
+        neigbour_weightings = (1/math.sqrt(2), 1, 1/math.sqrt(2), 1, 1/math.sqrt(2), 1, 1/math.sqrt(2), 1)
 
         cycle = True
         while cycle is True:
             particle_moved = False
             for index_x in range(self.map_size_x):
                 for index_y in range(self.map_size_y):
-                    random.shuffle(neighbour_offsets)
-                    for offset in neighbour_offsets:
-                        current_cell_height = self.map_grid[index_x][index_y]
-                        try:
-                            neighbour_cell_height = self.map_grid[index_x + offset[0]][index_y + offset[1]]
-                            if current_cell_height > neighbour_cell_height + 1:
-                                self.map_grid[index_x + offset[0]][index_y + offset[1]] += 1
-                                self.map_grid[index_x][index_y] -= 1
-                                particle_moved = True
-                        except IndexError:
-                            break
+                    [neigbour_choice] = random.choices(neighbour_offsets, neigbour_weightings)
+                    current_cell_height = self.map_grid[index_x][index_y]
+                    print(neigbour_choice)
+                    try:
+                        neighbour_cell_height = self.map_grid[index_x + neigbour_choice[0]][index_y + neigbour_choice[1]]
+                        if current_cell_height > neighbour_cell_height + 1:
+                            self.map_grid[index_x + neigbour_choice[0]][index_y + neigbour_choice[1]] += 1
+                            self.map_grid[index_x][index_y] -= 1
+                            particle_moved = True
+                    except IndexError:
+                        break
             if particle_moved is False:
                 break
 
@@ -69,6 +70,7 @@ class Tiler:
         self.perturbs_per_update = 1
         self.max_perturbs = 40
         self.sea_height = 3
+
         self.perturbs_counter = 0
 
         # initialize pygame
@@ -167,12 +169,13 @@ class Tiler:
         current_map_depth = self.terrain.map_depth - (index_y + index_x)
 
         if max(heights_at_offsets) <= self.sea_height:
+            # seabed
             pygame.draw.polygon(self.screen, depth_shade(colors.SEABED, current_map_depth / self.terrain.map_depth),
                                 terrain_pointlist_screen)  # fill
             pygame.draw.polygon(self.screen, colors.SEABED_GRID, terrain_pointlist_screen, 1)  # border
-
+            # sea surface
             pygame.draw.polygon(self.screen, depth_shade(colors.SEA, current_map_depth / self.terrain.map_depth),
-                                sea_pointlist_screen)  # fill
+                                 sea_pointlist_screen)  # fill
             pygame.draw.polygon(self.screen, colors.SEA_GRID, sea_pointlist_screen, 1)  # border
 
         else:
