@@ -35,6 +35,7 @@ class Terrain:
                             self.map_grid[index_x][index_y] -= 1
                             particle_moved = True
                     except IndexError:
+                        particle_moved = True  # particle falls off edge of world
                         break
             if particle_moved is False:
                 break
