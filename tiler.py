@@ -87,10 +87,20 @@ def get_relative_heights(absolute_heights):
     return relative_heights
 
 def get_tile_geometry_type(relative_heights):
-    if relative_heights == [0, 0, 0, 0] or relative_heights == [1, 1, 0, 0] or relative_heights == [0, 1, 1, 0] or relative_heights == [0, 0, 1, 1] or relative_heights == [1, 0, 0, 1]:
+    if relative_heights in [
+        [0, 0, 0, 0],
+        [0, 0, 1, 1],
+        [0, 1, 1, 0],
+        [1, 0, 0, 1],
+        [1, 1, 0, 0]
+    ]:
         return 'simple'
+    elif sorted(relative_heights) == [0, 0, 0, 1]:
+        return 'flat-high'
+    elif sorted(relative_heights) == [0, 1, 1, 1]:
+        return 'flat-low'
     else:
-        return 'complex'
+        return 'saddle'
 
 
 class Tiler:
@@ -177,7 +187,7 @@ class Tiler:
         screen_y += world_height * self.terrain_height_scale
         # screen_x = int(screen_x)
         # screen_y = int(screen_y)
-        return screen_x, screen_y
+        return int(screen_x), int(screen_y)
 
     def draw_floor(self):
         """
@@ -220,17 +230,19 @@ class Tiler:
             terrain_pointlist_screen.append(
                 self.camera(offset_x * self.tile_size + world_x, offset_y * self.tile_size + world_y,
                             world_terrain_height))
+
             sea_pointlist_screen.append(
                 self.camera(offset_x * self.tile_size + world_x, offset_y * self.tile_size + world_y, world_sea_height))
 
         relative_heights_at_offsets = get_relative_heights(heights_at_offsets)
+        geometry_type = get_tile_geometry_type(relative_heights_at_offsets)
+        depth_factor =  current_map_depth / self.terrain.map_depth
 
-        if get_tile_geometry_type(relative_heights_at_offsets) == 'simple':
+        if geometry_type == 'simple':
 
             if max(heights_at_offsets) <= self.sea_height:
                 # draw seabed quad
-                pygame.draw.polygon(self.screen, depth_shade(colors.SEABED, current_map_depth / self.terrain.map_depth),
-                                    terrain_pointlist_screen)  # fill
+                pygame.draw.polygon(self.screen, depth_shade(colors.SEABED, depth_factor), terrain_pointlist_screen)  # fill
                 pygame.draw.polygon(self.screen, colors.SEABED_GRID, terrain_pointlist_screen, 1)  # border
                 # draw sea surface quad
                 # pygame.draw.polygon(self.screen, depth_shade(colors.SEA, current_map_depth / self.terrain.map_depth),
@@ -239,15 +251,31 @@ class Tiler:
 
             else:
                 # draw land quad
-                pygame.draw.polygon(self.screen, depth_shade(colors.GRASS, current_map_depth / self.terrain.map_depth),
-                                    terrain_pointlist_screen)  # fill
+                pygame.draw.polygon(self.screen, depth_shade(colors.GRASS, depth_factor), terrain_pointlist_screen)  # fill
                 pygame.draw.polygon(self.screen, colors.GRASS_GRID, terrain_pointlist_screen, 1)  # border
+
+        elif geometry_type == 'flat-low':
+            # draw highlighted quad
+            pygame.draw.polygon(self.screen, depth_shade(colors.CYAN, depth_factor), terrain_pointlist_screen)  # fill
+            pygame.draw.polygon(self.screen, colors.BLACK, terrain_pointlist_screen, 1)  # border
+
+        elif geometry_type == 'flat-high':
+            # draw highlighted quad
+            pygame.draw.polygon(self.screen, depth_shade(colors.MAGENTA, depth_factor), terrain_pointlist_screen)  # fill
+            pygame.draw.polygon(self.screen, colors.BLACK, terrain_pointlist_screen, 1)  # border
 
         else:
             # draw highlighted quad
-            pygame.draw.polygon(self.screen, depth_shade(colors.RED, current_map_depth / self.terrain.map_depth),
+            pygame.draw.polygon(self.screen, depth_shade(colors.RED, depth_factor),
                                 terrain_pointlist_screen)  # fill
             pygame.draw.polygon(self.screen, colors.BLACK, terrain_pointlist_screen, 1)  # border
+
+            # pygame.draw.polygon(self.screen, depth_shade(colors.RED, depth_factor), terrain_pointlist_screen[0:3])  # right tri
+            # pygame.draw.polygon(self.screen, depth_shade(colors.YELLOW, depth_factor), terrain_pointlist_screen[1:4])  # front tri
+            # pygame.draw.polygon(self.screen, depth_shade(colors.YELLOW, depth_factor), terrain_pointlist_screen[1:4])  # front tri
+
+        #pygame.draw.circle(self.screen, colors.DEBUG, terrain_pointlist_screen[3], 5)
+
 
 if __name__ == "__main__":
     demo = Tiler()
