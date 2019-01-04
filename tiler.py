@@ -76,6 +76,23 @@ def depth_shade(base_color, depth):
     b = int(b + (255 - b) * depth * 0.65)
     return r, g, b
 
+def get_relative_heights(absolute_heights):
+    relative_heights = []
+    lowest = min(absolute_heights)
+    for h in absolute_heights:
+        if h > lowest:
+            relative_heights.append(1)
+        else:
+            relative_heights.append(0)
+    return relative_heights
+
+def get_tile_geometry_type(relative_heights):
+    relative_heights.sort()
+    if relative_heights == [0, 0, 0, 0] or relative_heights == [0, 0, 1, 1]:
+        return 'simple'
+    else:
+        return 'complex'
+
 
 class Tiler:
     """
@@ -186,42 +203,52 @@ class Tiler:
         :param index_x: x position on the tile grid
         :param index_y: y position on the tile grid
         """
-        local_offsets = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]
+        corner_offsets = [(0, 0), (1, 0), (1, 1), (0, 1)]
 
         heights_at_offsets = []
         terrain_pointlist_screen = []
         sea_pointlist_screen = []
 
-        for offset_x, offset_y in local_offsets:
+        world_sea_height = - self.sea_height * self.tile_size / 2
+        current_map_depth = self.terrain.map_depth - (index_y + index_x)
+
+        for offset_x, offset_y in corner_offsets:
             world_x, world_y = index_x * self.tile_size, index_y * self.tile_size
             map_height = self.terrain.map_grid[index_x + offset_x][index_y + offset_y]
             heights_at_offsets.append(map_height)
             world_terrain_height = - map_height * self.tile_size / 2
-            world_sea_height = - self.sea_height * self.tile_size / 2
+
             terrain_pointlist_screen.append(
                 self.camera(offset_x * self.tile_size + world_x, offset_y * self.tile_size + world_y,
                             world_terrain_height))
             sea_pointlist_screen.append(
                 self.camera(offset_x * self.tile_size + world_x, offset_y * self.tile_size + world_y, world_sea_height))
 
-        current_map_depth = self.terrain.map_depth - (index_y + index_x)
+        relative_heights_at_offsets = get_relative_heights(heights_at_offsets)
 
-        if max(heights_at_offsets) <= self.sea_height:
-            # draw seabed quad
-            pygame.draw.polygon(self.screen, depth_shade(colors.SEABED, current_map_depth / self.terrain.map_depth),
-                                terrain_pointlist_screen)  # fill
-            pygame.draw.polygon(self.screen, colors.SEABED_GRID, terrain_pointlist_screen, 1)  # border
-            # draw sea surface quad
-            pygame.draw.polygon(self.screen, depth_shade(colors.SEA, current_map_depth / self.terrain.map_depth),
-                                sea_pointlist_screen)  # fill
-            pygame.draw.polygon(self.screen, colors.SEA_GRID, sea_pointlist_screen, 1)  # border
+        if get_tile_geometry_type(relative_heights_at_offsets) == 'simple':
+
+            if max(heights_at_offsets) <= self.sea_height:
+                # draw seabed quad
+                pygame.draw.polygon(self.screen, depth_shade(colors.SEABED, current_map_depth / self.terrain.map_depth),
+                                    terrain_pointlist_screen)  # fill
+                pygame.draw.polygon(self.screen, colors.SEABED_GRID, terrain_pointlist_screen, 1)  # border
+                # draw sea surface quad
+                # pygame.draw.polygon(self.screen, depth_shade(colors.SEA, current_map_depth / self.terrain.map_depth),
+                #                    sea_pointlist_screen)  # fill
+                # pygame.draw.polygon(self.screen, colors.SEA_GRID, sea_pointlist_screen, 1)  # border
+
+            else:
+                # draw land quad
+                pygame.draw.polygon(self.screen, depth_shade(colors.GRASS, current_map_depth / self.terrain.map_depth),
+                                    terrain_pointlist_screen)  # fill
+                pygame.draw.polygon(self.screen, colors.GRASS_GRID, terrain_pointlist_screen, 1)  # border
 
         else:
-            # draw land quad
-            pygame.draw.polygon(self.screen, depth_shade(colors.GRASS, current_map_depth / self.terrain.map_depth),
+            # draw highlighted quad
+            pygame.draw.polygon(self.screen, depth_shade(colors.RED, current_map_depth / self.terrain.map_depth),
                                 terrain_pointlist_screen)  # fill
-            pygame.draw.polygon(self.screen, colors.GRASS_GRID, terrain_pointlist_screen, 1)  # border
-
+            pygame.draw.polygon(self.screen, colors.BLACK, terrain_pointlist_screen, 1)  # border
 
 if __name__ == "__main__":
     demo = Tiler()
