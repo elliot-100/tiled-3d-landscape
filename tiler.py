@@ -87,8 +87,7 @@ def get_relative_heights(absolute_heights):
     return relative_heights
 
 def get_tile_geometry_type(relative_heights):
-    relative_heights.sort()
-    if relative_heights == [0, 0, 0, 0] or relative_heights == [0, 0, 1, 1]:
+    if relative_heights == [0, 0, 0, 0] or relative_heights == [1, 1, 0, 0] or relative_heights == [0, 1, 1, 0] or relative_heights == [0, 0, 1, 1] or relative_heights == [1, 0, 0, 1]:
         return 'simple'
     else:
         return 'complex'
