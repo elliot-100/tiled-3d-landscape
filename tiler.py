@@ -7,11 +7,11 @@ import colors
 
 
 class Terrain:
-    def __init__(self, map_size_x, map_size_y):
-        self.map_size_x = map_size_x
-        self.map_size_y = map_size_y
-        self.map_depth = map_size_x + map_size_y + 2
-        self.map_grid = [[0 for _x in range(self.map_size_x + 1)] for _y in range(self.map_size_y + 1)]
+    def __init__(self, heightmap_size_x, heightmap_size_y):
+        self.heightmap_size_x = heightmap_size_x
+        self.heightmap_size_y = heightmap_size_y
+        self.map_depth = self.heightmap_size_x + self.heightmap_size_y + 2  # todo; is this correct?
+        self.heightmap = [[0 for _x in range(self.heightmap_size_x + 1)] for _y in range(self.heightmap_size_y + 1)]
 
     def perturb(self):
         """
@@ -20,25 +20,27 @@ class Terrain:
         """
         particles_per_drop = 128
         drop_index_x, drop_index_y = self.get_random_pos()
-        self.map_grid[drop_index_x][drop_index_y] += particles_per_drop
+        self.heightmap[drop_index_x][drop_index_y] += particles_per_drop
         neighbour_offsets = ((-1, -1), (0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0))
         neigbour_weightings = (math.sqrt(0.5), 1, math.sqrt(0.5), 1, math.sqrt(0.5), 1, math.sqrt(0.5), 1)
 
         cycle = True
         while cycle is True:
             particle_moved = False
-            for index_x in range(self.map_size_x):
-                for index_y in range(self.map_size_y):
+            for index_x in range(self.heightmap_size_x):
+                for index_y in range(self.heightmap_size_y):
                     [neigbour_choice] = random.choices(neighbour_offsets, neigbour_weightings)
-                    current_cell_height = self.map_grid[index_x][index_y]
+                    current_cell_height = self.heightmap[index_x][index_y]
                     try:
-                        neighbour_cell_height = self.map_grid[index_x + neigbour_choice[0]][index_y + neigbour_choice[1]]
+                        neighbour_cell_height = self.heightmap[index_x + neigbour_choice[0]][
+                            index_y + neigbour_choice[1]]
                         if current_cell_height > neighbour_cell_height + 1:
-                            self.map_grid[index_x + neigbour_choice[0]][index_y + neigbour_choice[1]] += 1
-                            self.map_grid[index_x][index_y] -= 1
+                            self.heightmap[index_x + neigbour_choice[0]][index_y + neigbour_choice[1]] += 1
+                            self.heightmap[index_x][index_y] -= 1
                             particle_moved = True
                     except IndexError:
                         particle_moved = True  # particle falls off edge of world
+                        print('fallen off') # FIXME this never seems to run?
                         break
             if particle_moved is False:
                 break
@@ -49,18 +51,18 @@ class Terrain:
 
         :return: Tuple representing an x, y position on the heightmap grid
         """
-        # never returns an edge cell
-        return random.randint(1, self.map_size_x - 2), random.randint(1, self.map_size_y - 2)
+        # never returns an edge node
+        return random.randint(1, self.heightmap_size_x - 1), random.randint(1, self.heightmap_size_y - 1)
 
     def normalise(self):
         """
         Lowers the whole terrain so that its lowest point is at zero height.
         """
-        lowest_height_value = min([min(row) for row in self.map_grid])
+        lowest_height_value = min([min(row) for row in self.heightmap])
         if lowest_height_value > 0:
-            for index_x in range(self.map_size_x):
-                for index_y in range(self.map_size_y):
-                    self.map_grid[index_x][index_y] -= 1
+            for index_x in range(self.heightmap_size_x):
+                for index_y in range(self.heightmap_size_y):
+                    self.heightmap[index_x][index_y] -= 1
 
 
 def depth_shade(base_color, depth):
@@ -84,10 +86,11 @@ class Tiler:
 
     def __init__(self):
         map_size_cells = (16, 16)  # 8, 8
+        self.map_size_cells = map_size_cells
         self.terrain = Terrain(map_size_cells[0] + 1, map_size_cells[1] + 1)
         self.tile_size = 30  # 60
         self.terrain_height_scale = 1 / math.sqrt(2)
-        self.world_size = (self.terrain.map_size_x - 1, self.terrain.map_size_y - 1) * self.tile_size
+        self.world_size = (self.map_size_cells[0], self.map_size_cells[1]) * self.tile_size
         self.perturbs_per_update = 1
         self.max_perturbs = 10
         self.sea_height = 4
@@ -124,8 +127,8 @@ class Tiler:
     def render_frame(self):
         self.screen.fill(colors.BACKGROUND)
         self.draw_floor()
-        for index_x in range(self.terrain.map_size_x - 1):
-            for index_y in range(self.terrain.map_size_y - 1):
+        for index_x in range(self.map_size_cells[0] - 1):
+            for index_y in range(self.map_size_cells[1] - 1):
                 self.draw_tile(index_x, index_y)
 
         # limit fps
@@ -194,7 +197,7 @@ class Tiler:
 
         for offset_x, offset_y in local_offsets:
             world_x, world_y = index_x * self.tile_size, index_y * self.tile_size
-            map_height = self.terrain.map_grid[index_x + offset_x][index_y + offset_y]
+            map_height = self.terrain.heightmap[index_x + offset_x][index_y + offset_y]
             heights_at_offsets.append(map_height)
             world_terrain_height = - map_height * self.tile_size / 2
             world_sea_height = - self.sea_height * self.tile_size / 2
