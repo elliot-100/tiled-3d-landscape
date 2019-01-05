@@ -7,8 +7,9 @@ import colors
 
 MAP_SIZE_CELLS = (16, 16)  # 8, 8
 TILE_SIZE = 30  # 60
-SEA_HEIGHT = 4
-MIN_HEIGHT = 3
+SEA_HEIGHT_CELLS = 4
+MIN_HEIGHT_CELLS = 0
+BASE_THICKNESS_CELLS = 1
 
 SCREEN_WIDTH = 700
 SCREEN_HEIGHT = 480
@@ -22,7 +23,7 @@ class Terrain:
         self.map_size_x = map_size_x
         self.map_size_y = map_size_y
         self.map_depth = map_size_x + map_size_y + 2
-        self.map_grid = [[MIN_HEIGHT for _x in range(self.map_size_x + 1)] for _y in range(self.map_size_y + 1)]
+        self.map_grid = [[MIN_HEIGHT_CELLS for _x in range(self.map_size_x + 1)] for _y in range(self.map_size_y + 1)]
 
     def perturb(self):
         """
@@ -127,10 +128,10 @@ class Tiler:
         self.terrain = Terrain(map_size_cells[0] + 1, map_size_cells[1] + 1)
         self.tile_size = TILE_SIZE
         self.terrain_height_scale = 1 / math.sqrt(2)
-        self.world_size = (self.terrain.map_size_x - 1, self.terrain.map_size_y - 1) * self.tile_size
+        self.world_size = ((self.terrain.map_size_x - 1) * self.tile_size, (self.terrain.map_size_y - 1) * self.tile_size)  #
         self.perturbs_per_update = PERTURBS_PER_UPDATE
         self.max_perturbs = MAX_PERTURBS
-        self.sea_height = SEA_HEIGHT
+        self.sea_height = SEA_HEIGHT_CELLS
 
         self.perturbs_counter = 0
 
@@ -155,7 +156,7 @@ class Tiler:
                 if self.perturbs_counter < self.max_perturbs:
                     self.terrain.perturb()
                     self.perturbs_counter += 1
-        self.terrain.normalise(MIN_HEIGHT)
+        self.terrain.normalise(MIN_HEIGHT_CELLS)
         self.render_frame()
 
     def update(self):
@@ -207,17 +208,16 @@ class Tiler:
         """
 
         """
-        world_max_x = self.world_size[0] * self.tile_size
-        world_max_y = self.world_size[1] * self.tile_size
+
         world_pointlist = [(0, 0),
-                           (world_max_x, 0),
-                           (world_max_x, world_max_y),
-                           (0, world_max_y),
+                           (self.world_size[0], 0),
+                           (self.world_size[0], self.world_size[1]),
+                           (0, self.world_size[1]),
                            (0, 0)]
         screen_pointlist = []
 
         for world_x, world_y in world_pointlist:
-            screen_pointlist.append(self.camera(world_x, world_y, -1))
+            screen_pointlist.append(self.camera(world_x, world_y, BASE_THICKNESS_CELLS * TILE_SIZE))
         pygame.draw.polygon(self.screen, colors.WORLD_EDGES, screen_pointlist)
 
     def draw_tile(self, index_x: int, index_y: int):
