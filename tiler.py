@@ -21,6 +21,7 @@ TERRAIN_HEIGHT_SCALE = 1 / math.sqrt(2)
 
 WORLD_SEA_HEIGHT = - SEA_HEIGHT_CELLS * TILE_SIZE / 2
 
+DEPTH_SHADER = True
 
 def camera(world_x, world_y, world_height=0):
     """
@@ -244,18 +245,28 @@ class Terrain:
                     self.map_grid[index_x][index_y] += increment
 
 
-def depth_shade(base_color, depth):
+def depth_shade(base_color, depth, depth_color=colors.DEPTH_COLOR):
     """
 
     :param base_color:
     :param depth:
     :return:
     """
-    r, g, b = base_color
-    r = int(r + (255 - r) * depth * 0.5)
-    g = int(g + (255 - g) * depth * 0.5)
-    b = int(b + (255 - b) * depth * 0.65)
-    return r, g, b
+
+    r1, g1, b1 = base_color
+    r2, g2, b2 = depth_color
+
+    if DEPTH_SHADER:
+
+        r = int((r1 * (1-depth)) + r2 * depth)
+        g = int((g1 * (1-depth)) + g2 * depth)
+        b = int((b1 * (1-depth)) + b2 * depth)
+
+        return r, g, b
+
+    else:
+
+        return r1, g1, b1
 
 
 class Tiler:
@@ -266,10 +277,6 @@ class Tiler:
     def __init__(self):
 
         self.world_size = ((terrain.map_size_x - 1) * TILE_SIZE, (terrain.map_size_y - 1) * TILE_SIZE)  #
-        self.perturbs_per_update = PERTURBS_PER_UPDATE
-        self.max_perturbs = MAX_PERTURBS
-        self.sea_height = SEA_HEIGHT_CELLS
-
         self.perturbs_counter = 0
 
         # initialize pygame
@@ -286,9 +293,9 @@ class Tiler:
 
     def main_loop(self):
         self.handle_input()
-        if self.perturbs_counter < self.max_perturbs:
-            for _ in range(self.perturbs_per_update):
-                if self.perturbs_counter < self.max_perturbs:
+        if self.perturbs_counter < MAX_PERTURBS:
+            for _ in range(PERTURBS_PER_UPDATE):
+                if self.perturbs_counter < MAX_PERTURBS:
                     terrain.perturb()
                     self.perturbs_counter += 1
         terrain.normalise(MIN_HEIGHT_CELLS)
