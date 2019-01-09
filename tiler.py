@@ -167,8 +167,10 @@ class Tile:
             return 'flat-high'
         elif sorted(self.relative_heights) == [0, 1, 1, 1]:
             return 'flat-low'
-        else:
+        elif sorted(self.relative_heights) == [0, 0, 1, 1]:
             return 'saddle'
+        else:
+            return 'unhandled geometry' # todo raise error
 
     def get_relative_heights(self):
         self.relative_heights = []
