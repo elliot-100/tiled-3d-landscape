@@ -4,6 +4,7 @@ import pygame
 import pygame.gfxdraw
 
 import colors
+import tile_shapes
 
 MAP_SIZE_CELLS = (16, 16)  # 8, 8
 TILE_SIZE = 30  # 60
@@ -66,8 +67,9 @@ class Tile:
         self.relative_heights = []
         self.relative_heights = self.get_relative_heights()
 
+
+        self.geometry_type = tile_shapes.geometries[tuple(self.relative_heights)]['type']
         # print(self.get_tile_geometry_type())
-        self.geometry_type = self.get_tile_geometry_type()
 
     def draw(self):
         """
@@ -98,7 +100,7 @@ class Tile:
             terrain_fill_color = colors.GRASS
             terrain_grid_color = colors.GRASS_GRID
 
-        if self.geometry_type == 'simple':
+        if self.geometry_type in ('slope', 'flat'):
 
             pygame.draw.polygon(tiler.screen, depth_shade(terrain_fill_color, self.depth_factor),
                                 terrain_pointlist_screen)  # fill
@@ -173,29 +175,6 @@ class Tile:
 
         # pygame.draw.circle(self.screen, colors.DEBUG, terrain_pointlist_screen[3], 5)
 
-    def get_tile_geometry_type(self):
-        """
-
-        Returns
-        -------
-
-        """
-        if self.relative_heights in [
-            [0, 0, 0, 0],
-            [0, 0, 1, 1],
-            [0, 1, 1, 0],
-            [1, 0, 0, 1],
-            [1, 1, 0, 0]
-        ]:
-            return 'simple'
-        elif sorted(self.relative_heights) == [0, 0, 0, 1]:
-            return 'flat-high'
-        elif sorted(self.relative_heights) == [0, 1, 1, 1]:
-            return 'flat-low'
-        elif sorted(self.relative_heights) == [0, 0, 1, 1]:
-            return 'saddle'
-        else:
-            return 'unhandled geometry'  # todo raise error
 
     def get_relative_heights(self):
         """
