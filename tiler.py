@@ -17,6 +17,169 @@ SCREEN_HEIGHT = 480
 PERTURBS_PER_UPDATE = 1
 MAX_PERTURBS = 10
 
+TERRAIN_HEIGHT_SCALE = 1 / math.sqrt(2)
+
+WORLD_SEA_HEIGHT = - SEA_HEIGHT_CELLS * TILE_SIZE / 2
+
+
+def camera(world_x, world_y, world_height=0):
+    """
+
+    :param world_x:
+    :param world_y:
+    :param world_height:
+    :return:
+    """
+    screen_x = (world_x - world_y) / math.sqrt(2) + SCREEN_WIDTH / 2
+    screen_y = (world_x + world_y) / math.sqrt(2) / 2 + 100
+    screen_y += world_height * TERRAIN_HEIGHT_SCALE
+    # screen_x = int(screen_x)
+    # screen_y = int(screen_y)
+    return int(screen_x), int(screen_y)
+
+
+class Tile:
+
+    def __init__(self, index_x, index_y):
+        self.index_x = index_x
+        self.index_y = index_y
+        self.corner_offsets = [(0, 0), (1, 0), (1, 1), (0, 1)]
+        self.absolute_heights = []
+        self.relative_heights = []
+        map_depth = terrain.map_depth - (index_y + index_x)
+        self.depth_factor = map_depth / terrain.map_depth
+        # self.relative_heights = self.get_relative_heights()
+        print(self.get_tile_geometry_type())
+        self.geometry_type = self.get_tile_geometry_type()
+        # self.get_tile_geometry_type()
+
+    def draw(self):
+
+        terrain_pointlist_screen = []
+        sea_pointlist_screen = []
+
+        for offset_x, offset_y in self.corner_offsets:
+            world_x, world_y = self.index_x * TILE_SIZE, self.index_y * TILE_SIZE
+            map_height = terrain.map_grid[self.index_x + offset_x][self.index_y + offset_y]
+            self.absolute_heights.append(map_height)
+            world_terrain_height = - map_height * TILE_SIZE / 2
+
+            terrain_pointlist_screen.append(
+                camera(offset_x * TILE_SIZE + world_x, offset_y * TILE_SIZE + world_y,
+                       world_terrain_height))
+
+            sea_pointlist_screen.append(
+                camera(offset_x * TILE_SIZE + world_x, offset_y * TILE_SIZE + world_y, WORLD_SEA_HEIGHT))
+
+        is_sea = False
+        if max(self.absolute_heights) <= SEA_HEIGHT_CELLS:  # TODO needs improvement
+            is_sea = True
+            terrain_fill_color = colors.SEABED
+            terrain_grid_color = colors.SEABED_GRID
+        else:
+            terrain_fill_color = colors.GRASS
+            terrain_grid_color = colors.GRASS_GRID
+
+        if self.geometry_type == 'simple':
+
+            pygame.draw.polygon(tiler.screen, depth_shade(terrain_fill_color, self.depth_factor),
+                                terrain_pointlist_screen)  # fill
+            pygame.draw.polygon(tiler.screen, depth_shade(terrain_grid_color, self.depth_factor),
+                                terrain_pointlist_screen, 1)  # grid/border
+
+            if is_sea:
+                pass
+                # draw sea surface quad
+                # pygame.draw.polygon(self.screen, depth_shade(colors.SEA, current_map_depth / self.terrain.map_depth),
+                #                    sea_pointlist_screen)  # fill
+                # pygame.draw.polygon(self.screen, colors.SEA_GRID, sea_pointlist_screen, 1)  # border
+
+        elif self.geometry_type == 'flat-low':
+            flat_tri_points = []
+            slope_tri_points = []
+
+            # print('relative_heights_at_offsets: {}'.format(relative_heights_at_offsets))
+            for i in range(len((self.relative_heights))):
+                if self.relative_heights[i] == 1:
+                    flat_tri_points.append(terrain_pointlist_screen[i])
+
+            # print('tri points: {}'.format(flat_tri_points))
+            # print('quad points: {}'.format(terrain_pointlist_screen))
+            # temp background quad
+            pygame.draw.polygon(tiler.screen, depth_shade(colors.MAGENTA, self.depth_factor),
+                                terrain_pointlist_screen)  # fill
+            pygame.draw.polygon(tiler.screen, depth_shade(colors.BLACK, self.depth_factor), terrain_pointlist_screen,
+                                1)  # border
+            # draw flat tri
+            pygame.draw.polygon(tiler.screen, depth_shade(terrain_fill_color, self.depth_factor),
+                                flat_tri_points)  # fill
+            pygame.draw.polygon(tiler.screen, depth_shade(terrain_grid_color, self.depth_factor), flat_tri_points,
+                                1)  # border
+            # draw slope tri
+
+
+        elif self.geometry_type == 'flat-high':
+            # draw flat tri
+            flat_tri_points = []
+            slope_tri_points = []
+
+            # print('relative_heights_at_offsets: {}'.format(relative_heights_at_offsets))
+
+            for i in range(len((self.relative_heights))):
+                if self.relative_heights[i] == 0:
+                    flat_tri_points.append(terrain_pointlist_screen[i])
+
+            # print('tri points: {}'.format(flat_tri_points))
+            # print('quad points: {}'.format(terrain_pointlist_screen))
+            # temp background quad
+            pygame.draw.polygon(tiler.screen, depth_shade(colors.CYAN, self.depth_factor),
+                                terrain_pointlist_screen)  # fill
+            pygame.draw.polygon(tiler.screen, depth_shade(colors.BLACK, self.depth_factor), terrain_pointlist_screen,
+                                1)  # border
+            # draw flat tri
+            pygame.draw.polygon(tiler.screen, depth_shade(terrain_fill_color, self.depth_factor),
+                                flat_tri_points)  # fill
+            pygame.draw.polygon(tiler.screen, depth_shade(terrain_grid_color, self.depth_factor), flat_tri_points,
+                                1)  # border
+
+        else:
+            # draw highlighted quad
+
+            pygame.draw.polygon(tiler.screen, depth_shade(colors.RED, self.depth_factor), terrain_pointlist_screen)  # fill
+            pygame.draw.polygon(tiler.screen, depth_shade(colors.RED_DARK, self.depth_factor), terrain_pointlist_screen, 1)  # border
+
+            # pygame.draw.polygon(self.screen, depth_shade(colors.RED, depth_factor), terrain_pointlist_screen[0:3])  # right tri
+            # pygame.draw.polygon(self.screen, depth_shade(colors.YELLOW, depth_factor), terrain_pointlist_screen[1:4])  # front tri
+            # pygame.draw.polygon(self.screen, depth_shade(colors.YELLOW, depth_factor), terrain_pointlist_screen[1:4])  # front tri
+
+        # pygame.draw.circle(self.screen, colors.DEBUG, terrain_pointlist_screen[3], 5)
+
+    def get_tile_geometry_type(self):
+        if self.relative_heights in [
+            [0, 0, 0, 0],
+            [0, 0, 1, 1],
+            [0, 1, 1, 0],
+            [1, 0, 0, 1],
+            [1, 1, 0, 0]
+        ]:
+            return 'simple'
+        elif sorted(self.relative_heights) == [0, 0, 0, 1]:
+            return 'flat-high'
+        elif sorted(self.relative_heights) == [0, 1, 1, 1]:
+            return 'flat-low'
+        else:
+            return 'saddle'
+
+    def get_relative_heights(self):
+        self.relative_heights = []
+        lowest = min(self.absolute_heights)
+        for h in self.absolute_heights:
+            if h > lowest:
+                self.relative_heights.append(1)
+            else:
+                self.relative_heights.append(0)
+        # return self.relative_heights
+
 
 class Terrain:
     def __init__(self, map_size_x, map_size_y):
@@ -41,12 +204,13 @@ class Terrain:
             particle_moved = False
             for index_x in range(self.map_size_x):
                 for index_y in range(self.map_size_y):
-                    [neigbour_choice] = random.choices(neighbour_offsets, neigbour_weightings)
+                    [neighbour_choice] = random.choices(neighbour_offsets, neigbour_weightings)
                     current_cell_height = self.map_grid[index_x][index_y]
                     try:
-                        neighbour_cell_height = self.map_grid[index_x + neigbour_choice[0]][index_y + neigbour_choice[1]]
+                        neighbour_cell_height = self.map_grid[index_x + neighbour_choice[0]][
+                            index_y + neighbour_choice[1]]
                         if current_cell_height > neighbour_cell_height + 1:
-                            self.map_grid[index_x + neigbour_choice[0]][index_y + neigbour_choice[1]] += 1
+                            self.map_grid[index_x + neighbour_choice[0]][index_y + neighbour_choice[1]] += 1
                             self.map_grid[index_x][index_y] -= 1
                             particle_moved = True
                     except IndexError:
@@ -91,32 +255,6 @@ def depth_shade(base_color, depth):
     b = int(b + (255 - b) * depth * 0.65)
     return r, g, b
 
-def get_relative_heights(absolute_heights):
-    relative_heights = []
-    lowest = min(absolute_heights)
-    for h in absolute_heights:
-        if h > lowest:
-            relative_heights.append(1)
-        else:
-            relative_heights.append(0)
-    return relative_heights
-
-def get_tile_geometry_type(relative_heights):
-    if relative_heights in [
-        [0, 0, 0, 0],
-        [0, 0, 1, 1],
-        [0, 1, 1, 0],
-        [1, 0, 0, 1],
-        [1, 1, 0, 0]
-    ]:
-        return 'simple'
-    elif sorted(relative_heights) == [0, 0, 0, 1]:
-        return 'flat-high'
-    elif sorted(relative_heights) == [0, 1, 1, 1]:
-        return 'flat-low'
-    else:
-        return 'saddle'
-
 
 class Tiler:
     """
@@ -124,11 +262,8 @@ class Tiler:
     """
 
     def __init__(self):
-        map_size_cells = MAP_SIZE_CELLS
-        self.terrain = Terrain(map_size_cells[0] + 1, map_size_cells[1] + 1)
-        self.tile_size = TILE_SIZE
-        self.terrain_height_scale = 1 / math.sqrt(2)
-        self.world_size = ((self.terrain.map_size_x - 1) * self.tile_size, (self.terrain.map_size_y - 1) * self.tile_size)  #
+
+        self.world_size = ((terrain.map_size_x - 1) * TILE_SIZE, (terrain.map_size_y - 1) * TILE_SIZE)  #
         self.perturbs_per_update = PERTURBS_PER_UPDATE
         self.max_perturbs = MAX_PERTURBS
         self.sea_height = SEA_HEIGHT_CELLS
@@ -137,9 +272,7 @@ class Tiler:
 
         # initialize pygame
         pygame.init()
-        self.screen_width = SCREEN_WIDTH
-        self.screen_height = SCREEN_HEIGHT
-        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption('Tiler')
 
         self.fps_clock = pygame.time.Clock()
@@ -154,9 +287,9 @@ class Tiler:
         if self.perturbs_counter < self.max_perturbs:
             for _ in range(self.perturbs_per_update):
                 if self.perturbs_counter < self.max_perturbs:
-                    self.terrain.perturb()
+                    terrain.perturb()
                     self.perturbs_counter += 1
-        self.terrain.normalise(MIN_HEIGHT_CELLS)
+        terrain.normalise(MIN_HEIGHT_CELLS)
         self.render_frame()
 
     def update(self):
@@ -165,9 +298,10 @@ class Tiler:
     def render_frame(self):
         self.screen.fill(colors.BACKGROUND)
         self.draw_floor()
-        for index_x in range(self.terrain.map_size_x - 1):
-            for index_y in range(self.terrain.map_size_y - 1):
-                self.draw_tile(index_x, index_y)
+        for index_x in range(terrain.map_size_x - 1):
+            for index_y in range(terrain.map_size_y - 1):
+                tile = Tile(index_x, index_y)
+                tile.draw()
 
         # limit fps
         self.fps_clock.tick(10)
@@ -189,21 +323,6 @@ class Tiler:
                     self.running = False
                     print("Quit via keypress")
 
-    def camera(self, world_x, world_y, world_height=0):
-        """
-
-        :param world_x:
-        :param world_y:
-        :param world_height:
-        :return:
-        """
-        screen_x = (world_x - world_y) / math.sqrt(2) + self.screen_width / 2
-        screen_y = (world_x + world_y) / math.sqrt(2) / 2 + 100
-        screen_y += world_height * self.terrain_height_scale
-        # screen_x = int(screen_x)
-        # screen_y = int(screen_y)
-        return int(screen_x), int(screen_y)
-
     def draw_floor(self):
         """
 
@@ -217,106 +336,11 @@ class Tiler:
         screen_pointlist = []
 
         for world_x, world_y in world_pointlist:
-            screen_pointlist.append(self.camera(world_x, world_y, BASE_THICKNESS_CELLS * TILE_SIZE))
+            screen_pointlist.append(camera(world_x, world_y, BASE_THICKNESS_CELLS * TILE_SIZE))
         pygame.draw.polygon(self.screen, colors.WORLD_EDGES, screen_pointlist)
-
-    def draw_tile(self, index_x: int, index_y: int):
-        """
-        Draws a single tile
-        :param index_x: x position on the tile grid
-        :param index_y: y position on the tile grid
-        """
-        corner_offsets = [(0, 0), (1, 0), (1, 1), (0, 1)]
-
-        heights_at_offsets = []
-        terrain_pointlist_screen = []
-        sea_pointlist_screen = []
-
-        world_sea_height = - self.sea_height * self.tile_size / 2
-        current_map_depth = self.terrain.map_depth - (index_y + index_x)
-
-        for offset_x, offset_y in corner_offsets:
-            world_x, world_y = index_x * self.tile_size, index_y * self.tile_size
-            map_height = self.terrain.map_grid[index_x + offset_x][index_y + offset_y]
-            heights_at_offsets.append(map_height)
-            world_terrain_height = - map_height * self.tile_size / 2
-
-            terrain_pointlist_screen.append(
-                self.camera(offset_x * self.tile_size + world_x, offset_y * self.tile_size + world_y,
-                            world_terrain_height))
-
-            sea_pointlist_screen.append(
-                self.camera(offset_x * self.tile_size + world_x, offset_y * self.tile_size + world_y, world_sea_height))
-
-        relative_heights_at_offsets = get_relative_heights(heights_at_offsets)
-        geometry_type = get_tile_geometry_type(relative_heights_at_offsets)
-        depth_factor =  current_map_depth / self.terrain.map_depth
-        is_sea = False
-        if max(heights_at_offsets) <= self.sea_height: # TODO needs improvement
-            is_sea = True
-            terrain_fill_color = colors.SEABED
-            terrain_grid_color = colors.SEABED_GRID
-        else:
-            terrain_fill_color = colors.GRASS
-            terrain_grid_color = colors.GRASS_GRID
-
-
-        if geometry_type == 'simple':
-
-            pygame.draw.polygon(self.screen, depth_shade(terrain_fill_color, depth_factor), terrain_pointlist_screen)  # fill
-            pygame.draw.polygon(self.screen, depth_shade(terrain_grid_color, depth_factor), terrain_pointlist_screen, 1)  # grid/border
-
-            if is_sea:
-                pass
-                # draw sea surface quad
-                # pygame.draw.polygon(self.screen, depth_shade(colors.SEA, current_map_depth / self.terrain.map_depth),
-                #                    sea_pointlist_screen)  # fill
-                # pygame.draw.polygon(self.screen, colors.SEA_GRID, sea_pointlist_screen, 1)  # border
-
-        elif geometry_type == 'flat-low':
-            flat_tri_points = []
-            print('relative_heights_at_offsets: {}'.format(relative_heights_at_offsets))
-            for i in range(len((relative_heights_at_offsets))):
-                if relative_heights_at_offsets[i] == 1:
-                    flat_tri_points.append(terrain_pointlist_screen[i])
-            print('tri points: {}'.format(flat_tri_points))
-            print('quad points: {}'.format(terrain_pointlist_screen))
-            # temp
-            pygame.draw.polygon(self.screen, depth_shade(colors.MAGENTA, depth_factor), terrain_pointlist_screen)  # fill
-            pygame.draw.polygon(self.screen, depth_shade(colors.MAGENTA_DARK, depth_factor), terrain_pointlist_screen, 1)  # border
-            # draw flat tri
-            pygame.draw.polygon(self.screen, depth_shade(terrain_fill_color, depth_factor), flat_tri_points)  # fill
-            pygame.draw.polygon(self.screen, depth_shade(terrain_grid_color, depth_factor), flat_tri_points, 1)  # border
-
-        elif geometry_type == 'flat-high':
-            # draw flat tri
-            flat_tri_points = []
-            print('relative_heights_at_offsets: {}'.format(relative_heights_at_offsets))
-            for i in range(len((relative_heights_at_offsets))):
-                if relative_heights_at_offsets[i] == 0:
-                    flat_tri_points.append(terrain_pointlist_screen[i])
-            print('tri points: {}'.format(flat_tri_points))
-            print('quad points: {}'.format(terrain_pointlist_screen))
-            # temp
-            pygame.draw.polygon(self.screen, depth_shade(colors.MAGENTA, depth_factor), terrain_pointlist_screen)  # fill
-            pygame.draw.polygon(self.screen, depth_shade(colors.MAGENTA_DARK, depth_factor), terrain_pointlist_screen, 1)  # border
-            # draw flat tri
-            pygame.draw.polygon(self.screen, depth_shade(terrain_fill_color, depth_factor), flat_tri_points)  # fill
-            pygame.draw.polygon(self.screen, depth_shade(terrain_grid_color, depth_factor), flat_tri_points, 1)  # border
-
-        else:
-            # draw highlighted quad
-            pass
-            # pygame.draw.polygon(self.screen, depth_shade(colors.RED, depth_factor), terrain_pointlist_screen)  # fill
-            # pygame.draw.polygon(self.screen, colors.BLACK, terrain_pointlist_screen, 1)  # border
-
-            # pygame.draw.polygon(self.screen, depth_shade(colors.RED, depth_factor), terrain_pointlist_screen[0:3])  # right tri
-            # pygame.draw.polygon(self.screen, depth_shade(colors.YELLOW, depth_factor), terrain_pointlist_screen[1:4])  # front tri
-            # pygame.draw.polygon(self.screen, depth_shade(colors.YELLOW, depth_factor), terrain_pointlist_screen[1:4])  # front tri
-
-        #pygame.draw.circle(self.screen, colors.DEBUG, terrain_pointlist_screen[3], 5)
 
 
 if __name__ == "__main__":
-    demo = Tiler()
-    demo.run()
+    terrain = Terrain(MAP_SIZE_CELLS[0] + 1, MAP_SIZE_CELLS[1] + 1)
+    tiler = Tiler()
+    tiler.run()
