@@ -8,15 +8,15 @@ import tile_shapes
 
 MAP_SIZE_CELLS = (16, 16)  # 8, 8
 TILE_SIZE = 30  # 60
-SEA_HEIGHT_CELLS = 5
+SEA_HEIGHT_CELLS = 4  # 4
 MIN_HEIGHT_CELLS = 0
 BASE_THICKNESS_CELLS = 1
 
 SCREEN_WIDTH = 700
 SCREEN_HEIGHT = 480
 
-PERTURBS_PER_UPDATE = 1
-MAX_PERTURBS = 99
+PERTURBS_PER_UPDATE = 1  # 1
+MAX_PERTURBS = 10  # 10
 
 TERRAIN_HEIGHT_SCALE = 1 / math.sqrt(2)
 
@@ -129,6 +129,7 @@ class Tile:
             tri2_fill_color = colors.GRASS
             tri1_grid_color = colors.GRASS_GRID
             tri2_grid_color = colors.GRASS_GRID
+
             if max(self.absolute_heights) <= SEA_HEIGHT_CELLS:  # TODO needs improvement
                 tri1_fill_color = colors.SEABED
                 tri1_grid_color = colors.SEABED_GRID
@@ -159,10 +160,10 @@ class Tile:
             for i in self.geometry_tri2:
                 tri2_points.append(terrain_pointlist_screen[i])
 
-                tri1_fill_color = colors.GRASS
-                tri2_fill_color = colors.GRASS
-                tri1_grid_color = colors.GRASS_GRID
-                tri2_grid_color = colors.GRASS_GRID
+            tri1_fill_color = colors.GRASS
+            tri2_fill_color = colors.GRASS
+            tri1_grid_color = colors.GRASS_GRID
+            tri2_grid_color = colors.GRASS_GRID
             if min(self.absolute_heights) <= SEA_HEIGHT_CELLS:  # TODO needs improvement
                 tri1_fill_color = colors.SEABED
                 tri1_grid_color = colors.SEABED_GRID
