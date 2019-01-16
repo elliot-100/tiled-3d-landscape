@@ -68,7 +68,7 @@ class Tile:
 
 
         self.geometry_type = tile_shapes.geometries[tuple(self.relative_heights)]['type']
-        if self.geometry_type in ('flat-low', 'flat-high'):
+        if self.geometry_type in ('flat-low', 'flat-high', 'saddle'):
             self.geometry_tri1 = tile_shapes.geometries[tuple(self.relative_heights)]['tri1']
             self.geometry_tri2 = tile_shapes.geometries[tuple(self.relative_heights)]['tri2']
 
@@ -183,6 +183,40 @@ class Tile:
             pygame.draw.polygon(tiler.screen, depth_shade(tri2_grid_color, self.depth_factor), tri2_points,
                                 1)  # border
 
+
+        elif self.geometry_type == 'saddle':
+            tri1_points = []
+            tri2_points = []
+
+            for i in self.geometry_tri1:
+                tri1_points.append(terrain_pointlist_screen[i])
+
+            for i in self.geometry_tri2:
+                tri2_points.append(terrain_pointlist_screen[i])
+
+            terrain_fill_color = colors.GRASS
+            terrain_grid_color = colors.GRASS_GRID
+
+            if min(self.absolute_heights) <= SEA_HEIGHT_CELLS:  # TODO needs improvement
+
+                terrain_fill_color = colors.SEABED
+                terrain_grid_color = colors.SEABED_GRID
+
+            # draw tri1
+
+            pygame.draw.polygon(tiler.screen, depth_shade(terrain_fill_color, self.depth_factor),
+                                tri1_points)  # fill
+
+            pygame.draw.polygon(tiler.screen, depth_shade(terrain_grid_color, self.depth_factor), tri1_points,
+                                1)  # border
+
+            # draw tri2
+
+            pygame.draw.polygon(tiler.screen, depth_shade(terrain_fill_color, self.depth_factor),
+                                tri2_points)  # fill
+
+            pygame.draw.polygon(tiler.screen, depth_shade(terrain_grid_color, self.depth_factor), tri2_points,
+                                1)  # border
         else:
             # draw highlighted quad
 

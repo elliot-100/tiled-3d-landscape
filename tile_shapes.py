@@ -4,12 +4,14 @@ geometries = {
     (0, 0, 1, 0): {'type': 'flat-high', 'tri1': (0, 1, 3), 'tri2': (1, 2, 3)},
     (0, 0, 1, 1): {'type': 'slope', 'quad': (0, 1, 2, 3)},
     (0, 1, 0, 0): {'type': 'flat-high', 'tri1': (0, 2, 3), 'tri2': (0, 1, 2)},
-    (0, 1, 0, 1): {'type': 'saddle'},
+    # (0, 1, 0, 1): {'type': 'saddle', 'tri1': (0, 1, 2), 'tri2': (0, 2, 3)},  # ambiguous - this is 'high' version
+    (0, 1, 0, 1): {'type': 'saddle', 'tri1': (0, 1, 3), 'tri2': (1, 2, 3)},  # ambiguous - this is 'low' version
     (0, 1, 1, 0): {'type': 'slope', 'quad': (0, 1, 2, 3)},
     (0, 1, 1, 1): {'type': 'flat-low', 'tri1': (1, 2, 3), 'tri2': (0, 1, 3)},
     (1, 0, 0, 0): {'type': 'flat-high', 'tri1': (1, 2, 3), 'tri2': (0, 1, 3)},
     (1, 0, 0, 1): {'type': 'slope', 'quad': (0, 1, 2, 3)},
-    (1, 0, 1, 0): {'type': 'saddle'},
+    # (1, 0, 1, 0): {'type': 'saddle', 'tri1': (0, 1, 2), 'tri2': (0, 2, 3)},  # ambiguous - this is 'high' version
+    (1, 0, 1, 0): {'type': 'saddle', 'tri1': (0, 1, 3), 'tri2': (1, 2, 3)},  # ambiguous - this is 'low' version
     (1, 0, 1, 1): {'type': 'flat-low', 'tri1': (2, 3, 0), 'tri2': (0, 1, 2)},
     (1, 1, 0, 0): {'type': 'slope', 'quad': (0, 1, 2, 3)},
     (1, 1, 0, 1): {'type': 'flat-low', 'tri1': (0, 1, 3), 'tri2': (1, 2, 3)},
