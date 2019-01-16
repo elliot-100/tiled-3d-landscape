@@ -175,7 +175,7 @@ class Tiler:
         screen_pointlist = []
 
         for world_x, world_y in world_pointlist:
-            screen_pointlist.append(self.camera(world_x, world_y, - self.tile_size))
+            screen_pointlist.append(self.camera(world_x, world_y, 0))
         pygame.draw.polygon(self.screen, colors.WORLD_EDGES, screen_pointlist)
 
     def draw_tile(self, index_x: int, index_y: int):
