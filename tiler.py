@@ -1,7 +1,6 @@
 import math
 import random
 import pygame
-import pygame.gfxdraw
 
 import colors
 
@@ -10,7 +9,7 @@ class Terrain:
     def __init__(self, heightmap_size_x, heightmap_size_y):
         self.heightmap_size_x = heightmap_size_x
         self.heightmap_size_y = heightmap_size_y
-        self.map_depth = self.heightmap_size_x + self.heightmap_size_y + 2  # todo; is this correct?
+        self.map_depth = self.heightmap_size_x + self.heightmap_size_y
         self.heightmap = [[0 for _x in range(self.heightmap_size_x)] for _y in range(self.heightmap_size_y)]
         print("created terrain data")
 
@@ -21,30 +20,28 @@ class Terrain:
         """
         particles_per_drop = 128
         drop_index_x, drop_index_y = self.get_random_pos()
+        # print('drop at', drop_index_x, drop_index_y)
         self.heightmap[drop_index_x][drop_index_y] += particles_per_drop
-        neighbour_offsets = ((-1, -1), (0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0))
-        neighbour_weightings = (math.sqrt(0.5), 1, math.sqrt(0.5), 1, math.sqrt(0.5), 1, math.sqrt(0.5), 1)
-
+        neighbour_offsets = [(-1, -1), (0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0)]
         cycle = True
         while cycle is True:
+            particle_moved_this_land_cycle = False
+            for index_x in range(self.heightmap_size_x):
+                for index_y in range(self.heightmap_size_y):
+                    random.shuffle(neighbour_offsets)
+                    for neighbour in neighbour_offsets:
+                        current_cell_height = self.heightmap[index_x][index_y]
+                        try:  # to address neighbour
+                            neighbour_cell_height = self.heightmap[index_x + neighbour[0]][index_y + neighbour[1]]
+                            if current_cell_height - neighbour_cell_height > 1:
+                                self.heightmap[index_x + neighbour[0]][index_y + neighbour[1]] += 1
+                                self.heightmap[index_x][index_y] -= 1
+                                # current_cell_height = self.heightmap[index_x][index_y]
+                                particle_moved_this_land_cycle = True
+                        except IndexError:  # can't address neighbour, it's out of bounds
+                            pass
 
-            for index_x in range(0, self.heightmap_size_x):
-                for index_y in range(0, self.heightmap_size_y):
-                    particle_moved_this_cycle = False
-                    [neighbour_choice] = random.choices(neighbour_offsets, neighbour_weightings)
-                    current_cell_height = self.heightmap[index_x][index_y]
-                    try:  # to address neighbour
-                        neighbour_cell_height = self.heightmap[index_x + neighbour_choice[0]][index_y + neighbour_choice[1]]
-                        if current_cell_height > neighbour_cell_height + 1:
-                            self.heightmap[index_x + neighbour_choice[0]][index_y + neighbour_choice[1]] += 1
-                            self.heightmap[index_x][index_y] -= 1
-                            particle_moved_this_cycle = True
-                    except IndexError: # can't address neighbour, it's out of bounds
-                        if current_cell_height > 0:
-                            # drop the particle off edge of world
-                            self.heightmap[index_x][index_y] -= 1
-                        particle_moved_this_cycle = True
-            if particle_moved_this_cycle is False:
+            if particle_moved_this_land_cycle is False:
                 break
 
     def get_random_pos(self):
@@ -93,8 +90,8 @@ class Tiler:
         self.tile_size = 30  # 60
         self.terrain_height_scale = 1 / math.sqrt(2)
         self.perturbs_per_update = 1
-        self.max_perturbs = 1
-        self.sea_height = 4
+        self.max_perturbs = 10
+        self.sea_height = 3
 
         self.perturbs_counter = 0
 
@@ -181,7 +178,7 @@ class Tiler:
         screen_pointlist = []
 
         for world_x, world_y in world_pointlist:
-            screen_pointlist.append(self.camera(world_x, world_y, 0))
+            screen_pointlist.append(self.camera(world_x, world_y))
         pygame.draw.polygon(self.screen, colors.WORLD_EDGES, screen_pointlist)
 
     def draw_tile(self, index_x: int, index_y: int):
