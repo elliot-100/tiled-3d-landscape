@@ -11,7 +11,8 @@ class Terrain:
         self.heightmap_size_x = heightmap_size_x
         self.heightmap_size_y = heightmap_size_y
         self.map_depth = self.heightmap_size_x + self.heightmap_size_y + 2  # todo; is this correct?
-        self.heightmap = [[0 for _x in range(self.heightmap_size_x + 1)] for _y in range(self.heightmap_size_y + 1)]
+        self.heightmap = [[0 for _x in range(self.heightmap_size_x)] for _y in range(self.heightmap_size_y)]
+        print("created terrain data")
 
     def perturb(self):
         """
@@ -22,26 +23,21 @@ class Terrain:
         drop_index_x, drop_index_y = self.get_random_pos()
         self.heightmap[drop_index_x][drop_index_y] += particles_per_drop
         neighbour_offsets = ((-1, -1), (0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0))
-        neigbour_weightings = (math.sqrt(0.5), 1, math.sqrt(0.5), 1, math.sqrt(0.5), 1, math.sqrt(0.5), 1)
+        neighbour_weightings = (math.sqrt(0.5), 1, math.sqrt(0.5), 1, math.sqrt(0.5), 1, math.sqrt(0.5), 1)
+        particle_moved = None
 
         cycle = True
         while cycle is True:
-            particle_moved = False
-            for index_x in range(self.heightmap_size_x):
-                for index_y in range(self.heightmap_size_y):
-                    [neigbour_choice] = random.choices(neighbour_offsets, neigbour_weightings)
+            for index_x in range(1, self.heightmap_size_x - 1):
+                for index_y in range(1, self.heightmap_size_y - 1):
+                    particle_moved = False
+                    [neighbour_choice] = random.choices(neighbour_offsets, neighbour_weightings)
                     current_cell_height = self.heightmap[index_x][index_y]
-                    try:
-                        neighbour_cell_height = self.heightmap[index_x + neigbour_choice[0]][
-                            index_y + neigbour_choice[1]]
-                        if current_cell_height > neighbour_cell_height + 1:
-                            self.heightmap[index_x + neigbour_choice[0]][index_y + neigbour_choice[1]] += 1
-                            self.heightmap[index_x][index_y] -= 1
-                            particle_moved = True
-                    except IndexError:
-                        particle_moved = True  # particle falls off edge of world
-                        print('fallen off') # FIXME this never seems to run?
-                        break
+                    neighbour_cell_height = self.heightmap[index_x + neighbour_choice[0]][index_y + neighbour_choice[1]]
+                    if current_cell_height > neighbour_cell_height + 1:
+                        self.heightmap[index_x + neighbour_choice[0]][index_y + neighbour_choice[1]] += 1
+                        self.heightmap[index_x][index_y] -= 1
+                        particle_moved = True
             if particle_moved is False:
                 break
 
@@ -90,9 +86,8 @@ class Tiler:
         self.terrain = Terrain(map_size_cells[0] + 1, map_size_cells[1] + 1)
         self.tile_size = 30  # 60
         self.terrain_height_scale = 1 / math.sqrt(2)
-        self.world_size = (self.map_size_cells[0], self.map_size_cells[1]) * self.tile_size
         self.perturbs_per_update = 1
-        self.max_perturbs = 10
+        self.max_perturbs = 1
         self.sea_height = 4
 
         self.perturbs_counter = 0
@@ -127,8 +122,8 @@ class Tiler:
     def render_frame(self):
         self.screen.fill(colors.BACKGROUND)
         self.draw_floor()
-        for index_x in range(self.map_size_cells[0] - 1):
-            for index_y in range(self.map_size_cells[1] - 1):
+        for index_x in range(self.map_size_cells[0]):
+            for index_y in range(self.map_size_cells[1]):
                 self.draw_tile(index_x, index_y)
 
         # limit fps
@@ -170,8 +165,8 @@ class Tiler:
         """
 
         """
-        world_max_x = self.world_size[0] * self.tile_size
-        world_max_y = self.world_size[1] * self.tile_size
+        world_max_x = self.map_size_cells[0] * self.tile_size
+        world_max_y = self.map_size_cells[1] * self.tile_size
         world_pointlist = [(0, 0),
                            (world_max_x, 0),
                            (world_max_x, world_max_y),
@@ -180,7 +175,7 @@ class Tiler:
         screen_pointlist = []
 
         for world_x, world_y in world_pointlist:
-            screen_pointlist.append(self.camera(world_x, world_y, -1))
+            screen_pointlist.append(self.camera(world_x, world_y, - self.tile_size))
         pygame.draw.polygon(self.screen, colors.WORLD_EDGES, screen_pointlist)
 
     def draw_tile(self, index_x: int, index_y: int):
