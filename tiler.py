@@ -24,21 +24,27 @@ class Terrain:
         self.heightmap[drop_index_x][drop_index_y] += particles_per_drop
         neighbour_offsets = ((-1, -1), (0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0))
         neighbour_weightings = (math.sqrt(0.5), 1, math.sqrt(0.5), 1, math.sqrt(0.5), 1, math.sqrt(0.5), 1)
-        particle_moved = None
 
         cycle = True
         while cycle is True:
-            for index_x in range(1, self.heightmap_size_x - 1):
-                for index_y in range(1, self.heightmap_size_y - 1):
-                    particle_moved = False
+
+            for index_x in range(0, self.heightmap_size_x):
+                for index_y in range(0, self.heightmap_size_y):
+                    particle_moved_this_cycle = False
                     [neighbour_choice] = random.choices(neighbour_offsets, neighbour_weightings)
                     current_cell_height = self.heightmap[index_x][index_y]
-                    neighbour_cell_height = self.heightmap[index_x + neighbour_choice[0]][index_y + neighbour_choice[1]]
-                    if current_cell_height > neighbour_cell_height + 1:
-                        self.heightmap[index_x + neighbour_choice[0]][index_y + neighbour_choice[1]] += 1
-                        self.heightmap[index_x][index_y] -= 1
-                        particle_moved = True
-            if particle_moved is False:
+                    try:  # to address neighbour
+                        neighbour_cell_height = self.heightmap[index_x + neighbour_choice[0]][index_y + neighbour_choice[1]]
+                        if current_cell_height > neighbour_cell_height + 1:
+                            self.heightmap[index_x + neighbour_choice[0]][index_y + neighbour_choice[1]] += 1
+                            self.heightmap[index_x][index_y] -= 1
+                            particle_moved_this_cycle = True
+                    except IndexError: # can't address neighbour, it's out of bounds
+                        if current_cell_height > 0:
+                            # drop the particle off edge of world
+                            self.heightmap[index_x][index_y] -= 1
+                        particle_moved_this_cycle = True
+            if particle_moved_this_cycle is False:
                 break
 
     def get_random_pos(self):
