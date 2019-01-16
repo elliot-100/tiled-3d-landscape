@@ -235,7 +235,7 @@ class Terrain:
         particles_per_drop = 128
         drop_index_x, drop_index_y = self.get_random_pos()
         self.map_grid[drop_index_x][drop_index_y] += particles_per_drop
-        neighbour_offsets = ((-1, -1), (0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0))
+        neighbour_offsets = [(-1, -1), (0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0)]
         neighbour_weightings = (math.sqrt(0.5), 1, math.sqrt(0.5), 1, math.sqrt(0.5), 1, math.sqrt(0.5), 1)
 
         cycle = True
@@ -257,7 +257,7 @@ class Terrain:
                             pass
 
             if particle_moved_this_land_cycle is False:
-            particle_moved = False
+                particle_moved = False
             for index_x in range(self.map_size_x):
                 for index_y in range(self.map_size_y):
                     [neighbour_choice] = random.choices(neighbour_offsets, neighbour_weightings)
