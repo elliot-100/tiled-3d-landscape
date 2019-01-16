@@ -1,7 +1,6 @@
 import math
 import random
 import pygame
-import pygame.gfxdraw
 
 import colors
 import tile_shapes
@@ -241,6 +240,23 @@ class Terrain:
 
         cycle = True
         while cycle is True:
+            particle_moved_this_land_cycle = False
+            for index_x in range(self.map_size_x):
+                for index_y in range(self.map_size_y):
+                    random.shuffle(neighbour_offsets)
+                    for neighbour in neighbour_offsets:
+                        current_cell_height = self.map_grid[index_x][index_y]
+                        try:  # to address neighbour
+                            neighbour_cell_height = self.map_grid[index_x + neighbour[0]][index_y + neighbour[1]]
+                            if current_cell_height - neighbour_cell_height > 1:
+                                self.map_grid[index_x + neighbour[0]][index_y + neighbour[1]] += 1
+                                self.map_grid[index_x][index_y] -= 1
+                                # current_cell_height = self.heightmap[index_x][index_y]
+                                particle_moved_this_land_cycle = True
+                        except IndexError:  # can't address neighbour, it's out of bounds
+                            pass
+
+            if particle_moved_this_land_cycle is False:
             particle_moved = False
             for index_x in range(self.map_size_x):
                 for index_y in range(self.map_size_y):
@@ -283,7 +299,7 @@ class Terrain:
 def depth_shade(base_color, depth, depth_color=colors.DEPTH_COLOR):
     """
 
-    :param depth_color: 
+    :param depth_color:
     :param base_color:
     :param depth:
     :return:
