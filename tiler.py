@@ -197,7 +197,7 @@ class Tile:
             terrain_fill_color = colors.GRASS
             terrain_grid_color = colors.GRASS_GRID
 
-            if min(self.absolute_heights) <= SEA_HEIGHT_CELLS:  # TODO needs improvement
+            if max(self.absolute_heights) <= SEA_HEIGHT_CELLS:  # TODO needs improvement
 
                 terrain_fill_color = colors.SEABED
                 terrain_grid_color = colors.SEABED_GRID
