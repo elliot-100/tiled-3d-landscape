@@ -9,6 +9,34 @@ readme = "README.md"
 python = "^3.9"
 pygame = "^2"
 
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.4"
+pre-commit = "^3.7"
+
+[tool.ruff]
+target-version = "py39"  # Ruff doesn't respect Python dependency in [tool.poetry.dependencies]
+
+[tool.ruff.lint]
+select = ["ANN", "D", "I"]
+ignore = [
+# Rules that conflict with Ruff formatter:
+#   COM812 Trailing comma missing
+#   ISC001 Implicitly concatenated string literals on one line
+"COM812", "ISC001",
+# Rules that are deprecated
+#   ANN101 Missing type annotation for `self` in method
+#   ANN102 Missing type annotation for `cls` in classmethod
+"ANN101", "ANN102",
+# Other rules:
+#   ANN101 Missing type annotation for `self` in method
+#   ANN102 Missing type annotation for `cls` in classmethod
+#   D205 1 blank line required between summary line and description
+"D205",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
