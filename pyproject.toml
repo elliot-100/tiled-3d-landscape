@@ -6,8 +6,8 @@ authors = ["elliot-100 <3186037+elliot-100@users.noreply.github.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-pygame = "^1.9"
+python = "^3.9"
+pygame = "^2"
 
 [build-system]
 requires = ["poetry-core"]
