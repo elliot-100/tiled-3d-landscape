@@ -12,6 +12,7 @@ pygame = "^2"
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.4"
 pre-commit = "^3.7"
+pytest = "^8.2"
 
 [tool.ruff]
 target-version = "py39"  # Ruff doesn't respect Python dependency in [tool.poetry.dependencies]

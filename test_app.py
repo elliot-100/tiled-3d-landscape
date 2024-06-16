@@ -1,4 +1,4 @@
-"""Test suite."""
+"""Tests for App class."""
 
 import unittest
 
@@ -12,8 +12,6 @@ class TestCase(unittest.TestCase):
         """Test."""
         test_tiler = app.App()
         self.assertEqual(test_tiler.map_size_cells, (16, 16))
-        self.assertEqual(test_tiler.terrain.heightmap_size_x, 17)
-        self.assertEqual(test_tiler.terrain.heightmap_size_y, 17)
 
 
 if __name__ == "__main__":

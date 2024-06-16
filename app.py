@@ -6,7 +6,10 @@ from typing import Tuple
 import pygame
 
 import colors
-from terrain import Terrain
+from heightmap import Heightmap
+
+PARTICLES_PER_DROP = 128
+MAX_SLOPE = 1
 
 
 class App:
@@ -15,7 +18,7 @@ class App:
     def __init__(self) -> None:
         map_size_cells = (16, 16)  # 8, 8
         self.map_size_cells = map_size_cells
-        self.terrain = Terrain(map_size_cells[0] + 1, map_size_cells[1] + 1)
+        self.terrain = Heightmap(map_size_cells[0] + 1, map_size_cells[1] + 1)
         self.tile_size = 30  # 60
         self.terrain_height_scale = 1 / math.sqrt(2)
         self.perturbs_per_update = 1
@@ -44,7 +47,10 @@ class App:
         if self.perturbs_counter < self.max_perturbs:
             for _ in range(self.perturbs_per_update):
                 if self.perturbs_counter < self.max_perturbs:
-                    self.terrain.perturb()
+                    self.terrain.perturb(
+                        particles=PARTICLES_PER_DROP,
+                        max_slope=MAX_SLOPE,
+                    )
                     self.perturbs_counter += 1
         self.terrain.normalise()
         self._render_frame()
