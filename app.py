@@ -1,6 +1,7 @@
 """App class."""
 
 import math
+from typing import Tuple
 
 import pygame
 
@@ -9,9 +10,9 @@ from terrain import Terrain
 
 
 class App:
-    """"""
+    """Application class."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         map_size_cells = (16, 16)  # 8, 8
         self.map_size_cells = map_size_cells
         self.terrain = Terrain(map_size_cells[0] + 1, map_size_cells[1] + 1)
@@ -33,29 +34,27 @@ class App:
         self.fps_clock = pygame.time.Clock()
         self.running = True
 
-    def run(self):
+    def run(self) -> None:
+        """Run the App."""
         while self.running:
-            self.main_loop()
+            self._main_loop()
 
-    def main_loop(self):
-        self.handle_input()
+    def _main_loop(self) -> None:
+        self._handle_input()
         if self.perturbs_counter < self.max_perturbs:
             for _ in range(self.perturbs_per_update):
                 if self.perturbs_counter < self.max_perturbs:
                     self.terrain.perturb()
                     self.perturbs_counter += 1
         self.terrain.normalise()
-        self.render_frame()
+        self._render_frame()
 
-    def update(self):
-        pass
-
-    def render_frame(self):
+    def _render_frame(self) -> None:
         self.screen.fill(colors.BACKGROUND)
-        self.draw_floor()
+        self._draw_floor()
         for index_x in range(self.map_size_cells[0]):
             for index_y in range(self.map_size_cells[1]):
-                self.draw_tile(index_x, index_y)
+                self._draw_tile(index_x, index_y)
 
         # limit fps
         self.fps_clock.tick(10)
@@ -63,7 +62,7 @@ class App:
         # update screen
         pygame.display.update()
 
-    def handle_input(self):
+    def _handle_input(self) -> None:
         pygame.event.pump()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -77,14 +76,12 @@ class App:
                     self.running = False
                     print("Quit via keypress")
 
-    def camera(self, world_x, world_y, world_height=0):
-        """
-
-        :param world_x:
-        :param world_y:
-        :param world_height:
-        :return:
-        """
+    def _camera(
+        self,
+        world_x: float,
+        world_y: float,
+        world_height: float = 0,
+    ) -> Tuple[float, float]:
         screen_x = (world_x - world_y) / math.sqrt(2) + self.screen_width / 2
         screen_y = (world_x + world_y) / math.sqrt(2) / 2 + 100
         screen_y += world_height * self.terrain_height_scale
@@ -92,8 +89,7 @@ class App:
         # screen_y = int(screen_y)
         return screen_x, screen_y
 
-    def draw_floor(self):
-        """ """
+    def _draw_floor(self) -> None:
         world_max_x = self.map_size_cells[0] * self.tile_size
         world_max_y = self.map_size_cells[1] * self.tile_size
         world_pointlist = [
@@ -106,15 +102,11 @@ class App:
         screen_pointlist = []
 
         for world_x, world_y in world_pointlist:
-            screen_pointlist.append(self.camera(world_x, world_y))
+            screen_pointlist.append(self._camera(world_x, world_y))
         pygame.draw.polygon(self.screen, colors.WORLD_EDGES, screen_pointlist)
 
-    def draw_tile(self, index_x: int, index_y: int):
-        """
-        Draws a single tile
-        :param index_x: x position on the tile grid
-        :param index_y: y position on the tile grid
-        """
+    def _draw_tile(self, index_x: int, index_y: int) -> None:
+        """Draws a single tile."""
         local_offsets = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]
 
         heights_at_offsets = []
@@ -128,14 +120,14 @@ class App:
             world_terrain_height = -map_height * self.tile_size / 2
             world_sea_height = -self.sea_height * self.tile_size / 2
             terrain_pointlist_screen.append(
-                self.camera(
+                self._camera(
                     offset_x * self.tile_size + world_x,
                     offset_y * self.tile_size + world_y,
                     world_terrain_height,
                 )
             )
             sea_pointlist_screen.append(
-                self.camera(
+                self._camera(
                     offset_x * self.tile_size + world_x,
                     offset_y * self.tile_size + world_y,
                     world_sea_height,
@@ -148,7 +140,7 @@ class App:
             # draw seabed quad
             pygame.draw.polygon(
                 self.screen,
-                self.depth_shade(
+                self._depth_shade(
                     colors.SEABED, current_map_depth / self.terrain.map_depth
                 ),
                 terrain_pointlist_screen,
@@ -159,7 +151,7 @@ class App:
             # draw sea surface quad
             pygame.draw.polygon(
                 self.screen,
-                self.depth_shade(
+                self._depth_shade(
                     colors.SEA, current_map_depth / self.terrain.map_depth
                 ),
                 sea_pointlist_screen,
@@ -172,7 +164,7 @@ class App:
             # draw land quad
             pygame.draw.polygon(
                 self.screen,
-                self.depth_shade(
+                self._depth_shade(
                     colors.GRASS, current_map_depth / self.terrain.map_depth
                 ),
                 terrain_pointlist_screen,
@@ -182,13 +174,10 @@ class App:
             )  # border
 
     @staticmethod
-    def depth_shade(base_color, depth):
-        """
-
-        :param base_color:
-        :param depth:
-        :return:
-        """
+    def _depth_shade(
+        base_color: Tuple[int, int, int],
+        depth: float,
+    ) -> Tuple[int, int, int]:
         r, g, b = base_color
         r = int(r + (255 - r) * depth * 0.5)
         g = int(g + (255 - g) * depth * 0.5)

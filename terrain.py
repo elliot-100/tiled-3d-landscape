@@ -1,10 +1,24 @@
 """Terrain class."""
 
 import random
+from typing import Tuple
 
 
 class Terrain:
-    def __init__(self, heightmap_size_x, heightmap_size_y):
+    """Represents a terrain.
+
+    Attributes
+    ----------
+    heightmap_size_x: int
+    heightmap_size_y: int
+    map_depth: int
+    heightmap: list[list[float]]
+        Access values via `heightmap[x][y]`
+
+    """
+
+    def __init__(self, heightmap_size_x: int, heightmap_size_y: int) -> None:
+        """Initialise heightmap cells to zero."""
         self.heightmap_size_x = heightmap_size_x
         self.heightmap_size_y = heightmap_size_y
         self.map_depth = self.heightmap_size_x + self.heightmap_size_y
@@ -14,13 +28,15 @@ class Terrain:
         ]
         print("created terrain data")
 
-    def perturb(self):
+    def perturb(self) -> None:
         """
-        Drop a quantity of particles at a single point on the Terrain object, then move the particles to neighbour cells
-        until the terrain is 'stable'.
+        Perturb the heightmap.
+
+        Drop a quantity of particles at a random cell, then move each particle to a
+        random neighbour cell  until the terrain is 'stable'.
         """
         particles_per_drop = 128
-        drop_index_x, drop_index_y = self.get_random_pos()
+        drop_index_x, drop_index_y = self._get_random_pos()
         # print('drop at', drop_index_x, drop_index_y)
         self.heightmap[drop_index_x][drop_index_y] += particles_per_drop
         neighbour_offsets = [
@@ -60,21 +76,15 @@ class Terrain:
             if particle_moved_this_land_cycle is False:
                 break
 
-    def get_random_pos(self):
-        """
-        Get a random point on the heightmap.
-
-        :return: Tuple representing an x, y position on the heightmap grid
-        """
+    def _get_random_pos(self) -> Tuple[int, int]:
+        """Get a random cell on the heightmap."""
         # never returns an edge node
         return random.randint(1, self.heightmap_size_x - 1), random.randint(
             1, self.heightmap_size_y - 1
         )
 
-    def normalise(self):
-        """
-        Lowers the whole terrain so that its lowest point is at zero height.
-        """
+    def normalise(self) -> None:
+        """Lowers the whole heightmap so that its lowest point is at zero height."""
         lowest_height_value = min([min(row) for row in self.heightmap])
         if lowest_height_value > 0:
             for index_x in range(self.heightmap_size_x):
