@@ -1,14 +1,15 @@
 import unittest
-import tiler
+
+import app
 
 
 class TestCase(unittest.TestCase):
     def test_create_tiler_object(self):
-        test_tiler = tiler.Tiler()
+        test_tiler = app.App()
         self.assertEqual(test_tiler.map_size_cells, (16, 16))
         self.assertEqual(test_tiler.terrain.heightmap_size_x, 17)
         self.assertEqual(test_tiler.terrain.heightmap_size_y, 17)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
