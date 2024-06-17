@@ -7,6 +7,7 @@ import pygame
 
 import colors
 from heightmap import Heightmap
+from tile import Tile
 
 # Heightmap
 PERTURBS = 10
@@ -52,7 +53,7 @@ class App:
 
         # initialize pygame
         pygame.init()
-        self.screen = pygame.display.set_mode(self.window_size)
+        self.window = pygame.display.set_mode(self.window_size)
         pygame.display.set_caption("Demo")
 
         self.fps_clock = pygame.time.Clock()
@@ -78,16 +79,23 @@ class App:
         self._render_frame()
 
     def _render_frame(self) -> None:
-        self.screen.fill(colors.BACKGROUND)
+        self.window.fill(colors.BACKGROUND)
         self._draw_floor()
         for index_x in range(self.landscape_size_tiles[0]):
             for index_y in range(self.landscape_size_tiles[1]):
-                self._draw_tile(index_x, index_y)
+                tile = Tile(
+                    surface=self.window,
+                    size_px=self.tile_size_px,
+                    heightmap=self.heightmap,
+                    height_scale=self.height_scale,
+                    sea_height=SEA_HEIGHT,
+                )
+                tile.render(index_x, index_y)
 
         # limit fps
         self.fps_clock.tick(10)
 
-        # update screen
+        # update window
         pygame.display.update()
 
     def _handle_input(self) -> None:
@@ -131,85 +139,4 @@ class App:
 
         for world_x, world_y in world_pointlist:
             screen_pointlist.append(self._camera(world_x, world_y))
-        pygame.draw.polygon(self.screen, colors.WORLD_EDGES, screen_pointlist)
-
-    def _draw_tile(self, index_x: int, index_y: int) -> None:
-        """Draws a single tile."""
-        local_offsets = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]
-
-        heights_at_offsets = []
-        terrain_pointlist_screen = []
-        sea_pointlist_screen = []
-
-        for offset_x, offset_y in local_offsets:
-            world_x, world_y = index_x * self.tile_size_px, index_y * self.tile_size_px
-            map_height = self.heightmap.heightmap[index_x + offset_x][
-                index_y + offset_y
-            ]
-            heights_at_offsets.append(map_height)
-            world_terrain_height = -map_height * self.tile_size_px / 2
-            world_sea_height = -SEA_HEIGHT * self.tile_size_px / 2
-            terrain_pointlist_screen.append(
-                self._camera(
-                    offset_x * self.tile_size_px + world_x,
-                    offset_y * self.tile_size_px + world_y,
-                    world_terrain_height,
-                )
-            )
-            sea_pointlist_screen.append(
-                self._camera(
-                    offset_x * self.tile_size_px + world_x,
-                    offset_y * self.tile_size_px + world_y,
-                    world_sea_height,
-                )
-            )
-
-        current_map_depth = self.heightmap.map_depth - (index_y + index_x)
-
-        if max(heights_at_offsets) <= SEA_HEIGHT:
-            # draw seabed quad
-            pygame.draw.polygon(
-                self.screen,
-                self._depth_shade(
-                    colors.SEABED, current_map_depth / self.heightmap.map_depth
-                ),
-                terrain_pointlist_screen,
-            )  # fill
-            pygame.draw.polygon(
-                self.screen, colors.SEABED_GRID, terrain_pointlist_screen, 1
-            )  # border
-            # draw sea surface quad
-            pygame.draw.polygon(
-                self.screen,
-                self._depth_shade(
-                    colors.SEA, current_map_depth / self.heightmap.map_depth
-                ),
-                sea_pointlist_screen,
-            )  # fill
-            pygame.draw.polygon(
-                self.screen, colors.SEA_GRID, sea_pointlist_screen, 1
-            )  # border
-
-        else:
-            # draw land quad
-            pygame.draw.polygon(
-                self.screen,
-                self._depth_shade(
-                    colors.GRASS, current_map_depth / self.heightmap.map_depth
-                ),
-                terrain_pointlist_screen,
-            )  # fill
-            pygame.draw.polygon(
-                self.screen, colors.GRASS_GRID, terrain_pointlist_screen, 1
-            )  # border
-
-    @staticmethod
-    def _depth_shade(
-        base_color: Tuple[int, int, int],
-        depth: float,
-    ) -> Tuple[int, int, int]:
-        r, g, b = base_color
-        r = int(r + (255 - r) * depth * 0.5)
-        g = int(g + (255 - g) * depth * 0.5)
-        b = int(b + (255 - b) * depth * 0.65)
-        return r, g, b
+        pygame.draw.polygon(self.window, colors.WORLD_EDGES, screen_pointlist)
