@@ -6,29 +6,53 @@ from typing import Tuple
 import pygame
 
 import colors
-from terrain import Terrain
+from heightmap import Heightmap
+
+# Heightmap
+PERTURBS = 10
+PARTICLES_PER_PERTURB = 128
+MAX_SLOPE = 1
+
+# Rendering
+TILE_SIZE_PX = 30
+HEIGHT_SCALE = 1 / math.sqrt(2)
+PERTURBS_PER_DISPLAY_UPDATE = 1
+SEA_HEIGHT = 3
 
 
 class App:
-    """Application class."""
+    """Application class.
 
-    def __init__(self) -> None:
-        map_size_cells = (16, 16)  # 8, 8
-        self.map_size_cells = map_size_cells
-        self.terrain = Terrain(map_size_cells[0] + 1, map_size_cells[1] + 1)
-        self.tile_size = 30  # 60
-        self.terrain_height_scale = 1 / math.sqrt(2)
-        self.perturbs_per_update = 1
-        self.max_perturbs = 10
-        self.sea_height = 3
+    Attributes
+    ----------
+    window_size: Tuple[int, int]
+    landscape_size_tiles: Tuple[int, int]
+    tile_size_px: int
+    height_scale: float
+    heightmap: Heightmap
 
-        self.perturbs_counter = 0
+    """
+
+    def __init__(
+        self,
+        window_size: Tuple[int, int],
+        landscape_size_tiles: Tuple[int, int],
+    ) -> None:
+        self.window_size = window_size
+        self.landscape_size_tiles = landscape_size_tiles
+        self.tile_size_px = TILE_SIZE_PX
+        self.height_scale = HEIGHT_SCALE
+
+        self.heightmap = Heightmap(
+            self.landscape_size_tiles[0] + 1,
+            self.landscape_size_tiles[1] + 1,
+            # heightmap applies to vertices
+        )
+        self._perturbs_counter = 0
 
         # initialize pygame
         pygame.init()
-        self.screen_width = 700
-        self.screen_height = 480
-        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+        self.screen = pygame.display.set_mode(self.window_size)
         pygame.display.set_caption("Demo")
 
         self.fps_clock = pygame.time.Clock()
@@ -40,20 +64,24 @@ class App:
             self._main_loop()
 
     def _main_loop(self) -> None:
+        """Continues to run after landscape is complete, so window does not close."""
         self._handle_input()
-        if self.perturbs_counter < self.max_perturbs:
-            for _ in range(self.perturbs_per_update):
-                if self.perturbs_counter < self.max_perturbs:
-                    self.terrain.perturb()
-                    self.perturbs_counter += 1
-        self.terrain.normalise()
+        if self._perturbs_counter < PERTURBS:
+            for _ in range(PERTURBS_PER_DISPLAY_UPDATE):
+                if self._perturbs_counter < PERTURBS:
+                    self.heightmap.perturb(
+                        particles=PARTICLES_PER_PERTURB,
+                        max_slope=MAX_SLOPE,
+                    )
+                    self._perturbs_counter += 1
+        self.heightmap.normalise()
         self._render_frame()
 
     def _render_frame(self) -> None:
         self.screen.fill(colors.BACKGROUND)
         self._draw_floor()
-        for index_x in range(self.map_size_cells[0]):
-            for index_y in range(self.map_size_cells[1]):
+        for index_x in range(self.landscape_size_tiles[0]):
+            for index_y in range(self.landscape_size_tiles[1]):
                 self._draw_tile(index_x, index_y)
 
         # limit fps
@@ -82,16 +110,16 @@ class App:
         world_y: float,
         world_height: float = 0,
     ) -> Tuple[float, float]:
-        screen_x = (world_x - world_y) / math.sqrt(2) + self.screen_width / 2
+        screen_x = (world_x - world_y) / math.sqrt(2) + self.window_size[0] / 2
         screen_y = (world_x + world_y) / math.sqrt(2) / 2 + 100
-        screen_y += world_height * self.terrain_height_scale
+        screen_y += world_height * self.height_scale
         # screen_x = int(screen_x)
         # screen_y = int(screen_y)
         return screen_x, screen_y
 
     def _draw_floor(self) -> None:
-        world_max_x = self.map_size_cells[0] * self.tile_size
-        world_max_y = self.map_size_cells[1] * self.tile_size
+        world_max_x = self.landscape_size_tiles[0] * self.tile_size_px
+        world_max_y = self.landscape_size_tiles[1] * self.tile_size_px
         world_pointlist = [
             (0, 0),
             (world_max_x, 0),
@@ -114,34 +142,36 @@ class App:
         sea_pointlist_screen = []
 
         for offset_x, offset_y in local_offsets:
-            world_x, world_y = index_x * self.tile_size, index_y * self.tile_size
-            map_height = self.terrain.heightmap[index_x + offset_x][index_y + offset_y]
+            world_x, world_y = index_x * self.tile_size_px, index_y * self.tile_size_px
+            map_height = self.heightmap.heightmap[index_x + offset_x][
+                index_y + offset_y
+            ]
             heights_at_offsets.append(map_height)
-            world_terrain_height = -map_height * self.tile_size / 2
-            world_sea_height = -self.sea_height * self.tile_size / 2
+            world_terrain_height = -map_height * self.tile_size_px / 2
+            world_sea_height = -SEA_HEIGHT * self.tile_size_px / 2
             terrain_pointlist_screen.append(
                 self._camera(
-                    offset_x * self.tile_size + world_x,
-                    offset_y * self.tile_size + world_y,
+                    offset_x * self.tile_size_px + world_x,
+                    offset_y * self.tile_size_px + world_y,
                     world_terrain_height,
                 )
             )
             sea_pointlist_screen.append(
                 self._camera(
-                    offset_x * self.tile_size + world_x,
-                    offset_y * self.tile_size + world_y,
+                    offset_x * self.tile_size_px + world_x,
+                    offset_y * self.tile_size_px + world_y,
                     world_sea_height,
                 )
             )
 
-        current_map_depth = self.terrain.map_depth - (index_y + index_x)
+        current_map_depth = self.heightmap.map_depth - (index_y + index_x)
 
-        if max(heights_at_offsets) <= self.sea_height:
+        if max(heights_at_offsets) <= SEA_HEIGHT:
             # draw seabed quad
             pygame.draw.polygon(
                 self.screen,
                 self._depth_shade(
-                    colors.SEABED, current_map_depth / self.terrain.map_depth
+                    colors.SEABED, current_map_depth / self.heightmap.map_depth
                 ),
                 terrain_pointlist_screen,
             )  # fill
@@ -152,7 +182,7 @@ class App:
             pygame.draw.polygon(
                 self.screen,
                 self._depth_shade(
-                    colors.SEA, current_map_depth / self.terrain.map_depth
+                    colors.SEA, current_map_depth / self.heightmap.map_depth
                 ),
                 sea_pointlist_screen,
             )  # fill
@@ -165,7 +195,7 @@ class App:
             pygame.draw.polygon(
                 self.screen,
                 self._depth_shade(
-                    colors.GRASS, current_map_depth / self.terrain.map_depth
+                    colors.GRASS, current_map_depth / self.heightmap.map_depth
                 ),
                 terrain_pointlist_screen,
             )  # fill
