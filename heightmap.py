@@ -96,8 +96,8 @@ class Heightmap:
 
     def normalise(self) -> None:
         """Lowers the whole heightmap so that its lowest point is at zero height."""
-        lowest_height_value = min([min(row) for row in self.heightmap])
-        if lowest_height_value > 0:
+        lowest_height = min([min(row) for row in self.heightmap])
+        if lowest_height > 0:
             for index_x in range(self.size_x):
                 for index_y in range(self.size_y):
-                    self.heightmap[index_x][index_y] -= 1
+                    self.heightmap[index_x][index_y] -= lowest_height
