@@ -87,10 +87,12 @@ class App:
                     surface=self.window,
                     size_px=self.tile_size_px,
                     heightmap=self.heightmap,
+                    index_x=index_x,
+                    index_y=index_y,
                     height_scale=self.height_scale,
                     sea_height=SEA_HEIGHT,
                 )
-                tile.render(index_x, index_y)
+                tile.render()
 
         # limit fps
         self.fps_clock.tick(10)
