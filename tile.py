@@ -5,7 +5,7 @@ from typing import Tuple
 import pygame
 
 import colors
-from camera import camera
+from camera import isometric_projection
 from heightmap import Heightmap
 
 CORNER_OFFSETS = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]
@@ -57,21 +57,23 @@ class Tile:
             world_terrain_height = -map_height * self.size_px / 2
             world_sea_height = -self.sea_height * self.size_px / 2
             self.terrain_pointlist_screen.append(
-                camera(
+                isometric_projection(
                     world_x=offset_x * self.size_px + world_x,
                     world_y=offset_y * self.size_px + world_y,
-                    world_height=world_terrain_height,
-                    window_width=self.surface.get_width(),
-                    height_scale=self.height_scale,
+                    world_z=world_terrain_height,
+                    display_x_offset=self.surface.get_width() / 2,
+                    display_y_offset=100,
+                    scale_z=self.height_scale,
                 ),
             )
             self.sea_pointlist_screen.append(
-                camera(
+                isometric_projection(
                     world_x=offset_x * self.size_px + world_x,
                     world_y=offset_y * self.size_px + world_y,
-                    world_height=world_sea_height,
-                    window_width=self.surface.get_width(),
-                    height_scale=self.height_scale,
+                    world_z=world_sea_height,
+                    display_x_offset=self.surface.get_width() / 2,
+                    display_y_offset=100,
+                    scale_z=self.height_scale,
                 ),
             )
 

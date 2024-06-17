@@ -6,6 +6,7 @@ from typing import Tuple
 import pygame
 
 import colors
+from camera import isometric_projection
 from heightmap import Heightmap
 from tile import Tile
 
@@ -21,7 +22,9 @@ PERTURBS_PER_DISPLAY_UPDATE = 1
 SEA_HEIGHT = 3
 
 # Window
-WINDOW_BOTTOM_MARGIN = 100
+WINDOW_TOP_MARGIN = 100
+
+CORNER_OFFSETS = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]
 
 
 class App:
@@ -114,50 +117,22 @@ class App:
                     print("Quit via keypress")
 
     def _render_floor(self) -> None:
-        """Draw a single landscape-sized quad at height zero."""
         grid_points = [
-            (0, 0),
-            (self.landscape_size_tiles[0], 0),
-            (self.landscape_size_tiles[0], self.landscape_size_tiles[1]),
-            (0, self.landscape_size_tiles[1]),
-            (0, 0),
+            (
+                x * self.landscape_size_tiles[0],
+                y * self.landscape_size_tiles[1],
+            )
+            for x, y in CORNER_OFFSETS
         ]
         screen_points = [
-            self._grid_xyz_to_window_xy(x, y)
+            isometric_projection(
+                world_x=x * TILE_SIZE_PX,
+                world_y=y * TILE_SIZE_PX,
+                world_z=0,
+                display_x_offset=self.window_size[0] / 2,
+                display_y_offset=WINDOW_TOP_MARGIN,
+                scale_z=HEIGHT_SCALE,
+            )
             for x, y in grid_points
         ]
         pygame.draw.polygon(self.window, colors.WORLD_EDGES, screen_points)
-
-    def _grid_xyz_to_window_xy(
-        self,
-        grid_x: int,
-        grid_y: int,
-        grid_z: int = 0,
-    ) -> Tuple[float, float]:
-        """Convert grid (x, y, z) index coordinate to window (x, y) pixel coordinate."""
-        return self._world_xyz_to_window_xy(
-            world_x=grid_x * TILE_SIZE_PX,
-            world_y=grid_y * TILE_SIZE_PX,
-            world_z=grid_z,
-        )
-
-    def _world_xyz_to_window_xy(
-        self,
-        world_x: float,
-        world_y: float,
-        world_z: float = 0,
-    ) -> Tuple[float, float]:
-        """Convert world (x, y, z) pixel coordinate to window (x, y) pixel coordinate.
-
-        Uses 'video game isometric' projection, i.e. dimetric projection with a 2:1
-        pixel ratio.
-        """
-        display_x = (world_x - world_y) / math.sqrt(2)
-        display_y = (world_x + world_y) / math.sqrt(2) / 2
-
-        display_x += +self.window_size[0] / 2  # centre horizontally in window
-
-        display_y += WINDOW_BOTTOM_MARGIN
-        display_y += world_z * HEIGHT_SCALE
-
-        return display_x, display_y
