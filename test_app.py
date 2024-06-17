@@ -1,18 +1,12 @@
 """Tests for App class."""
 
-import unittest
-
-import app
+from app import App
 
 
-class TestCase(unittest.TestCase):
-    """Test case."""
-
-    def test_create_tiler_object(self) -> None:
-        """Test."""
-        test_tiler = app.App()
-        self.assertEqual(test_tiler.map_size_cells, (16, 16))
-
-
-if __name__ == "__main__":
-    unittest.main()
+def test_create_app_happy_path() -> None:
+    """Test."""
+    app0 = App(
+        window_size=(800, 600),
+        landscape_size_tiles=(3, 3),
+    )
+    assert app0.heightmap.size_x, app0.heightmap.size_x == (4, 4)
