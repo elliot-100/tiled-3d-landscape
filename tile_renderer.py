@@ -11,7 +11,7 @@ from heightmap import Heightmap
 CORNER_OFFSETS = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]
 
 
-class Tile:
+class TileRenderer:
     """Represents a single Landscape tile.
 
     Attributes
