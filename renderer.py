@@ -6,7 +6,7 @@ import pygame
 
 import colors
 from camera import isometric_projection
-from heightmap import Heightmap
+from heightmap import Heightmap, Location
 from tile_renderer import TileRenderer
 
 # Rendering
@@ -40,14 +40,15 @@ class Renderer:
     def render(self) -> None:
         """Render the landscape."""
         self._render_floor()
-        for index_x in range(self.heightmap.size_x - 1):
-            for index_y in range(self.heightmap.size_y - 1):
+        for x in range(self.heightmap.size_x - 1):
+            for y in range(self.heightmap.size_y - 1):
                 tile = TileRenderer(
                     surface=self.surface,
                     size_px=TILE_SIZE_PX,
-                    heightmap=self.heightmap,
-                    index_x=index_x,
-                    index_y=index_y,
+                    heights_at_corners=self.tile_corner_heights(Location(x, y)),
+                    depth=self.tile_distance(Location(x, y)),
+                    index_x=x,
+                    index_y=y,
                     height_scale=HEIGHT_SCALE,
                     sea_height=SEA_HEIGHT,
                 )
@@ -73,3 +74,22 @@ class Renderer:
             for x, y in grid_points
         ]
         pygame.draw.polygon(self.surface, colors.WORLD_EDGES, screen_points)
+
+    def tile_is_underwater(self, location: Location) -> bool:
+        """Determine if the tile is underwater.
+        True if no corners are above sea level.
+        """
+        heights = list(self.tile_corner_heights(location).values())
+        return max(heights) <= SEA_HEIGHT
+
+    def tile_corner_heights(self, location: Location) -> dict[tuple[int, int], int]:
+        """Return a dict, key: corner_offset, value: height."""
+        heights = {}
+        for x, y in CORNER_OFFSETS:
+            heights[x, y] = self.heightmap.heightmap[location.x + x][location.y + y]
+        return heights
+
+    def tile_distance(self, location: Location) -> float:
+        """Return a value between 0 and 1."""
+        landscape_depth = self.heightmap.size_x + self.heightmap.size_y
+        return (location.x + location.y) / landscape_depth

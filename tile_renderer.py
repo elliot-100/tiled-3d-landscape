@@ -8,17 +8,14 @@ import colors
 from camera import isometric_projection
 from heightmap import Heightmap
 
-CORNER_OFFSETS = [(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]
-
 
 class TileRenderer:
-    """Represents a single Landscape tile.
+    """Renders a single Tile to a pygame Surface.
 
     Attributes
     ----------
     surface: pygame.Surface
     size_px: int
-    heightmap: Heightmap
     index_x: int
     index_y: int
     height_scale: float
@@ -29,7 +26,8 @@ class TileRenderer:
         self,
         surface: pygame.Surface,
         size_px: int,
-        heightmap: Heightmap,
+        depth: float,
+        heights_at_corners: dict[tuple[int, int], int],
         index_x: int,
         index_y: int,
         height_scale: float,
@@ -37,29 +35,25 @@ class TileRenderer:
     ) -> None:
         self.surface = surface
         self.size_px = size_px
-        self.heightmap = heightmap
+        self.depth = depth
+        self.heights_at_corners = heights_at_corners
         self.index_x = index_x
         self.index_y = index_y
         self.height_scale = height_scale
         self.sea_height = sea_height
 
-        self.heights_at_corners = []
         self.terrain_pointlist_screen = []
         self.sea_pointlist_screen = []
 
-        for offset_x, offset_y in CORNER_OFFSETS:
+        for offset, height in heights_at_corners.items():
             world_x, world_y = self.index_x * self.size_px, self.index_y * self.size_px
-            map_height = self.heightmap.heightmap[self.index_x + offset_x][
-                self.index_y + offset_y
-            ]
-            self.heights_at_corners.append(map_height)
 
-            world_terrain_height = -map_height * self.size_px / 2
+            world_terrain_height = -height * self.size_px / 2
             world_sea_height = -self.sea_height * self.size_px / 2
             self.terrain_pointlist_screen.append(
                 isometric_projection(
-                    world_x=offset_x * self.size_px + world_x,
-                    world_y=offset_y * self.size_px + world_y,
+                    world_x=offset[0] * self.size_px + world_x,
+                    world_y=offset[1] * self.size_px + world_y,
                     world_z=world_terrain_height,
                     display_x_offset=self.surface.get_width() / 2,
                     display_y_offset=100,
@@ -68,8 +62,8 @@ class TileRenderer:
             )
             self.sea_pointlist_screen.append(
                 isometric_projection(
-                    world_x=offset_x * self.size_px + world_x,
-                    world_y=offset_y * self.size_px + world_y,
+                    world_x=offset[0] * self.size_px + world_x,
+                    world_y=offset[1] * self.size_px + world_y,
                     world_z=world_sea_height,
                     display_x_offset=self.surface.get_width() / 2,
                     display_y_offset=100,
@@ -77,16 +71,12 @@ class TileRenderer:
                 ),
             )
 
-        self.current_map_depth = self.heightmap.map_depth - (
-            self.index_y + self.index_x
-        )
-
     @property
     def is_underwater(self) -> bool:
         """Determine if the tile is underwater.
         True if no corners are above sea level.
         """
-        return max(self.heights_at_corners) <= self.sea_height
+        return max(self.heights_at_corners.values()) <= self.sea_height
 
     def render(self) -> None:
         """Render the Tile to the Pygame surface."""
@@ -101,7 +91,7 @@ class TileRenderer:
             self.surface,
             self._depth_shade(
                 colors.SEABED,
-                self.current_map_depth / self.heightmap.map_depth,
+                self.depth,
             ),
             self.terrain_pointlist_screen,
         )  # fill
@@ -117,7 +107,7 @@ class TileRenderer:
             self.surface,
             self._depth_shade(
                 colors.SEA_SURFACE,
-                self.current_map_depth / self.heightmap.map_depth,
+                self.depth,
             ),
             self.sea_pointlist_screen,
         )  # fill
@@ -133,7 +123,7 @@ class TileRenderer:
             self.surface,
             self._depth_shade(
                 colors.GRASS,
-                self.current_map_depth / self.heightmap.map_depth,
+                self.depth,
             ),
             self.terrain_pointlist_screen,
         )  # fill
