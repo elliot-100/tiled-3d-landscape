@@ -1,6 +1,6 @@
 """Tests for App class."""
 
-from pytest import approx
+import pytest
 
 from app import App
 from camera import isometric_projection
@@ -30,6 +30,6 @@ def test_camera() -> None:
     # assert
     relative_tolerance = 1e-3
     assert nw == (0, 0)
-    assert ne == approx((0.7071, 0.3535), relative_tolerance)
-    assert se == approx((0, 0.7071), relative_tolerance)
-    assert sw == approx((-0.7071, 0.3535), relative_tolerance)
+    assert ne == pytest.approx((0.7071, 0.3535), relative_tolerance)
+    assert se == pytest.approx((0, 0.7071), relative_tolerance)
+    assert sw == pytest.approx((-0.7071, 0.3535), relative_tolerance)

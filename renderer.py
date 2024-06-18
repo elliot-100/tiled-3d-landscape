@@ -77,6 +77,7 @@ class Renderer:
 
     def tile_is_underwater(self, location: Location) -> bool:
         """Determine if the tile is underwater.
+
         True if no corners are above sea level.
         """
         heights = list(self.tile_corner_heights(location).values())

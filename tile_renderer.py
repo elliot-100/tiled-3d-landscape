@@ -1,12 +1,9 @@
 """Tile class."""
 
-from typing import Tuple
-
 import pygame
 
 import colors
 from camera import isometric_projection
-from heightmap import Heightmap
 
 
 class TileRenderer:
@@ -136,9 +133,9 @@ class TileRenderer:
 
     @staticmethod
     def _depth_shade(
-        base_color: Tuple[int, int, int],
+        base_color: tuple[int, int, int],
         depth: float,
-    ) -> Tuple[int, int, int]:
+    ) -> tuple[int, int, int]:
         r, g, b = base_color
         r = int(r + (255 - r) * depth * 0.5)
         g = int(g + (255 - g) * depth * 0.5)

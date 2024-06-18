@@ -1,6 +1,6 @@
 """App class."""
 
-from typing import Tuple
+import logging
 
 import pygame
 
@@ -30,8 +30,8 @@ class App:
 
     def __init__(
         self,
-        window_size: Tuple[int, int],
-        landscape_size_tiles: Tuple[int, int],
+        window_size: tuple[int, int],
+        landscape_size_tiles: tuple[int, int],
     ) -> None:
         self.window_size = window_size
         self.landscape_size_tiles = landscape_size_tiles
@@ -87,11 +87,13 @@ class App:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
-                print("Quit event")
+                logging.info("Quit event.")
                 break
 
             # KEYBOARD
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
-                    self.running = False
-                    print("Quit via keypress")
+            if event.type == pygame.KEYDOWN and event.key in {
+                pygame.K_ESCAPE,
+                pygame.K_q,
+            }:
+                self.running = False
+                logging.info("Quit via keypress.")

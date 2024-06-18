@@ -1,7 +1,6 @@
 """Camera function."""
 
 import math
-from typing import Tuple
 
 
 def isometric_projection(
@@ -11,7 +10,7 @@ def isometric_projection(
     display_x_offset: float = 0,
     display_y_offset: float = 0,
     scale_z: float = 1,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """Convert world (x, y, z) pixel coordinate to window (x, y) pixel coordinate.
 
     Uses 'video game isometric' projection, i.e. dimetric projection with a 2:1
